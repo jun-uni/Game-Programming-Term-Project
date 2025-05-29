@@ -1,0 +1,42 @@
+{
+  "0": {
+    "key": "ui.settings.systemlanguage",
+    "ko": "시스템 언어 :",
+    "eng": "System Language :"
+  },
+  "1": {
+    "key": "ui.settings.gamelanguage",
+    "ko": "게임 언어 :",
+    "eng": "Game Language :"
+  },
+  "2": {
+    "key": "ui.settings.confirm",
+    "ko": "확인",
+    "eng": "Confirm"
+  },
+  "3": {
+    "key": "ui.settings.cancel",
+    "ko": "취소",
+    "eng": "Cancel"
+  },
+  "4": {
+    "key": "ui.main.start",
+    "ko": "게임 시작",
+    "eng": "Game Start"
+  },
+  "5": {
+    "key": "ui.main.settings",
+    "ko": "환경 설정",
+    "eng": "Settings"
+  },
+  "6": {
+    "key": "ui.main.credits",
+    "ko": "크레딧",
+    "eng": "Credits"
+  },
+  "7": {
+    "key": "ui.credits.close",
+    "ko": "닫기",
+    "eng": "Close"
+  }
+}
