@@ -3,20 +3,36 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement Settings")] public float moveSpeed = 4f; // 걷기 속도
+    [Header("Movement Settings")]
+    public float moveSpeed = 4f; // 걷기 속도
     public float runSpeed = 8f; // 뛰기 속도
 
-    [Header("Animation Smooth Settings")] [Range(0.1f, 10f)]
+    [Header("Animation Smooth Settings")]
+    [Range(0.1f, 10f)]
     public float moveBlendSpeed = 8f; // 이동 블렌딩 속도
 
-    [Range(0.1f, 10f)] public float rotationBlendSpeed = 10f; // 회전 블렌딩 속도
-    [Range(0.1f, 5f)] public float animationSmoothTime = 0.15f; // 애니메이션 부드러움 정도
+    [Range(0.1f, 10f)]
+    public float rotationBlendSpeed = 10f; // 회전 블렌딩 속도
 
-    [Header("Camera Settings")] public Transform camTransform;
+    [Range(0.1f, 5f)]
+    public float animationSmoothTime = 0.15f; // 애니메이션 부드러움 정도
 
-    [Header("Components")] private Animator animator;
+    [Header("Camera Settings")]
+    public Transform camTransform;
+
+    [Header("Hit Settings")]
+    [Range(0.5f, 5f)]
+    public float invincibleTime = 1.5f; // 무적 시간 (초)
+
+    [Range(0.1f, 1f)]
+    public float blinkInterval = 0.1f; // 무적 시 깜빡임 간격
+
+    [Header("Components")]
+    private Animator animator;
+    private Renderer[] renderers; // 깜빡임 효과를 위한 렌더러들
 
     private float currentHitPoint = 100;
+    private bool isInvincible = false; // 무적 상태
 
     // 부드러운 애니메이션을 위한 변수들
     private Vector2 currentAnimParams = Vector2.zero;
@@ -30,6 +46,9 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         animator = GetComponent<Animator>();
+
+        // 모든 렌더러 컴포넌트 가져오기 (깜빡임 효과용)
+        renderers = GetComponentsInChildren<Renderer>();
 
         // 카메라 참조가 없으면 메인 카메라 사용
         if (camTransform == null)
@@ -46,6 +65,13 @@ public class PlayerController : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         Debug.Log("콜라이더 닿음!");
+
+        // 무적 상태일 때는 피격 처리하지 않음
+        if (isInvincible)
+        {
+            Debug.Log("무적 상태라 피격 무시됨");
+            return;
+        }
 
         // Enemy Hand 태그 확인
         if (other.CompareTag("Enemy Hand"))
@@ -130,7 +156,7 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 피격 처리 - 기존과 동일하지만 더 부드러운 처리
+    /// 피격 처리 - 무적 시간 적용
     /// </summary>
     public void OnHit(Vector3 hitSourcePos)
     {
@@ -146,8 +172,63 @@ public class PlayerController : MonoBehaviour
         animator.SetInteger("HitDir", hitDir);
         animator.SetTrigger("Hit");
 
+        // 무적 상태 시작
+        StartCoroutine(InvincibleCoroutine());
+
         // 피격 시 이동 파라미터를 잠시 0으로 만들어 더 자연스럽게
         StartCoroutine(ResetAnimationAfterHit());
+    }
+
+    /// <summary>
+    /// 무적 시간 처리 코루틴
+    /// </summary>
+    private System.Collections.IEnumerator InvincibleCoroutine()
+    {
+        isInvincible = true;
+        Debug.Log("무적 상태 시작");
+
+        // 깜빡임 효과 시작
+        StartCoroutine(BlinkEffect());
+
+        // 무적 시간 대기
+        yield return new WaitForSeconds(invincibleTime);
+
+        // 무적 상태 해제
+        isInvincible = false;
+
+        // 렌더러를 다시 보이게 설정 (깜빡임 효과 종료)
+        SetRenderersEnabled(true);
+
+        Debug.Log("무적 상태 종료");
+    }
+
+    /// <summary>
+    /// 무적 시간 동안 깜빡임 효과
+    /// </summary>
+    private System.Collections.IEnumerator BlinkEffect()
+    {
+        while (isInvincible)
+        {
+            // 렌더러 끄기
+            SetRenderersEnabled(false);
+            yield return new WaitForSeconds(blinkInterval);
+
+            // 렌더러 켜기
+            SetRenderersEnabled(true);
+            yield return new WaitForSeconds(blinkInterval);
+        }
+    }
+
+    /// <summary>
+    /// 모든 렌더러의 활성화 상태 설정
+    /// </summary>
+    private void SetRenderersEnabled(bool enabled)
+    {
+        foreach (var renderer in renderers)
+        {
+            if (renderer != null)
+                renderer.enabled = enabled;
+        }
     }
 
     /// <summary>
@@ -166,6 +247,14 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
+    /// 무적 상태 확인 (외부에서 참조 가능)
+    /// </summary>
+    public bool IsInvincible()
+    {
+        return isInvincible;
+    }
+
+    /// <summary>
     /// 에디터에서 기즈모를 통한 디버깅
     /// </summary>
     private void OnDrawGizmos()
@@ -181,6 +270,13 @@ public class PlayerController : MonoBehaviour
             Gizmos.color = Color.red;
             Vector3 animDir = new(currentAnimParams.x, 0, currentAnimParams.y);
             Gizmos.DrawRay(transform.position + Vector3.up * 1.5f, animDir);
+
+            // 무적 상태 시각화
+            if (isInvincible)
+            {
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawWireSphere(transform.position, 1f);
+            }
         }
     }
 }
