@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.VFX;
 
 public class MagicProjectile : MonoBehaviour
 {
@@ -7,8 +6,8 @@ public class MagicProjectile : MonoBehaviour
     [SerializeField] private float maxDistance = 50f; // 최대 이동 거리
     [SerializeField] private float targetRadius = 1f; // 타겟 충돌 반경
 
-    [Header("VFX 설정")] [SerializeField] private VisualEffect vfx; // Visual Effect Graph 컴포넌트
-    [SerializeField] private string velocityDirectionProperty = "velocityDirection"; // VFX 속성 이름
+    [Header("Particle System 설정")] [SerializeField]
+    private ParticleSystem projectileParticle; // 파티클 시스템 컴포넌트
 
     [Header("Hit Effect 설정")] [SerializeField]
     private GameObject hitEffectPrefab; // 명중 시 생성할 이펙트 프리팹
@@ -34,9 +33,9 @@ public class MagicProjectile : MonoBehaviour
 
     private void Awake()
     {
-        // VFX 컴포넌트 자동 찾기
-        if (vfx == null)
-            vfx = GetComponent<VisualEffect>();
+        // Particle System 컴포넌트 자동 찾기
+        if (projectileParticle == null)
+            projectileParticle = GetComponent<ParticleSystem>();
 
         // AudioSource 자동 찾기 또는 생성
         if (audioSource == null)
@@ -60,8 +59,11 @@ public class MagicProjectile : MonoBehaviour
         speed = projectileSpeed;
         startPosition = transform.position;
 
-        // VFX 방향 설정 (이동 방향의 반대로 설정)
-        SetVFXVelocityDirection(-moveDirection);
+        // GameObject를 이동 방향으로 회전 (파티클 시스템이 이 방향을 따라감)
+        if (moveDirection != Vector3.zero) transform.rotation = Quaternion.LookRotation(moveDirection);
+
+        // 파티클 시스템 시작
+        if (projectileParticle != null) projectileParticle.Play();
 
         if (showDebugInfo)
             Debug.Log($"투사체 초기화: 타겟={target.name}, 방향={moveDirection}, 속도={speed}");
@@ -86,17 +88,14 @@ public class MagicProjectile : MonoBehaviour
             // 부드러운 방향 전환 (선택사항)
             moveDirection = Vector3.Slerp(moveDirection, targetDirection, Time.deltaTime * 2f);
 
-            // VFX 방향도 업데이트
-            SetVFXVelocityDirection(-moveDirection);
+            // GameObject 회전 업데이트 (파티클 방향도 자동으로 업데이트됨)
+            if (moveDirection != Vector3.zero) transform.rotation = Quaternion.LookRotation(moveDirection);
         }
 
         // 이동
         Vector3 movement = moveDirection * speed * Time.deltaTime;
         transform.position += movement;
         traveledDistance += movement.magnitude;
-
-        // 회전 (이동 방향으로)
-        if (moveDirection != Vector3.zero) transform.rotation = Quaternion.LookRotation(moveDirection);
     }
 
     private void CheckTargetHit()
@@ -137,8 +136,8 @@ public class MagicProjectile : MonoBehaviour
         // 타겟에 데미지 적용
         ApplyDamageToTarget();
 
-        // 충돌 효과 (VFX 정지 또는 변경)
-        StopVFX();
+        // 충돌 효과 (파티클 정지)
+        StopParticle();
 
         // 일정 시간 후 파괴
         Destroy(gameObject, destroyDelay);
@@ -199,36 +198,21 @@ public class MagicProjectile : MonoBehaviour
         }
     }
 
-    private void SetVFXVelocityDirection(Vector3 direction)
+    private void StopParticle()
     {
-        if (vfx != null && vfx.HasVector3(velocityDirectionProperty))
+        if (projectileParticle != null)
         {
-            vfx.SetVector3(velocityDirectionProperty, direction);
+            // 파티클 방출 정지 (기존 파티클은 계속 보임)
+            projectileParticle.Stop(false, ParticleSystemStopBehavior.StopEmitting);
 
             if (showDebugInfo)
-                Debug.Log($"VFX 방향 설정: {direction}");
-        }
-        else if (showDebugInfo)
-        {
-            Debug.LogWarning($"VFX 또는 '{velocityDirectionProperty}' 속성을 찾을 수 없습니다.");
-        }
-    }
-
-    private void StopVFX()
-    {
-        if (vfx != null)
-        {
-            // VFX 정지 또는 충돌 효과로 전환
-            vfx.Stop();
-
-            if (showDebugInfo)
-                Debug.Log("VFX 정지됨");
+                Debug.Log("파티클 시스템 정지됨");
         }
     }
 
     private void DestroyProjectile()
     {
-        StopVFX();
+        StopParticle();
         Destroy(gameObject);
     }
 
@@ -245,11 +229,8 @@ public class MagicProjectile : MonoBehaviour
             Gizmos.DrawRay(transform.position, moveDirection * 2f);
         }
 
-        // VFX 방향 표시 (반대 방향)
-        if (moveDirection != Vector3.zero)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawRay(transform.position, -moveDirection * 2f);
-        }
+        // GameObject의 forward 방향 표시 (파티클이 나가는 방향)
+        Gizmos.color = Color.green;
+        Gizmos.DrawRay(transform.position, transform.forward * 2f);
     }
 }

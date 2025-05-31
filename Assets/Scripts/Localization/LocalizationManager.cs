@@ -42,6 +42,7 @@ public static class LocalizationManager
 
     // 초기화 완료 여부
     private static bool isInitialized = false;
+    private static bool isInitializing = false;
 
     public static bool IsInitialized => isInitialized;
 
@@ -54,8 +55,11 @@ public static class LocalizationManager
     // 매니저 초기화 (게임 매니저 Start에서 호출)
     public static void Initialize(MonoBehaviour coroutineRunner)
     {
-        if (isInitialized)
+        if (isInitialized || isInitializing)
             return;
+
+        isInitializing = true;
+        Debug.Log("LocalizationManager 초기화 시작");
 
         // 시스템 언어 감지 또는 저장된 설정 불러오기
         LoadSystemLanguage();
@@ -65,14 +69,41 @@ public static class LocalizationManager
         string filePath = Path.Combine(Application.streamingAssetsPath, "Language.json");
 
         if (Application.platform == RuntimePlatform.WebGLPlayer)
+        {
+            // WebGL에서는 코루틴 완료 후 초기화 완료 처리
             coroutineRunner.StartCoroutine(LoadLocalizedTextWebGL(filePath));
+        }
         else
+        {
+            // 일반 플랫폼에서는 동기적으로 로딩 후 즉시 초기화 완료
             LoadLocalizedText(filePath);
+            CompleteInitialization();
+        }
+    }
+
+    // 초기화 완료 처리를 별도 메서드로 분리
+    private static void CompleteInitialization()
+    {
+        if (isInitialized)
+        {
+            Debug.LogWarning("LocalizationManager가 이미 초기화되었습니다.");
+            return;
+        }
 
         isInitialized = true;
+        isInitializing = false;
+
+        Debug.Log("LocalizationManager 초기화 완료");
 
         // 초기화 완료 이벤트 발생
-        OnLanguageInitialized?.Invoke();
+        try
+        {
+            OnLanguageInitialized?.Invoke();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"OnLanguageInitialized 이벤트 처리 중 오류: {e.Message}");
+        }
     }
 
     // 시스템 언어 감지 또는 설정 불러오기
@@ -189,18 +220,40 @@ public static class LocalizationManager
     // WebGL 플랫폼을 위한 비동기 로딩
     private static IEnumerator LoadLocalizedTextWebGL(string filePath)
     {
+        Debug.Log($"WebGL에서 언어 파일 로딩 시작: {filePath}");
+
         UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Get(filePath);
         yield return www.SendWebRequest();
+
+        // 초기화 중복 체크 (코루틴 실행 중에 다른 곳에서 초기화가 완료되었을 수 있음)
+        if (isInitialized)
+        {
+            Debug.Log("WebGL 로딩 중 이미 다른 곳에서 초기화가 완료됨");
+            yield break;
+        }
 
         if (www.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
         {
             string jsonText = www.downloadHandler.text;
-            ProcessJsonData(jsonText);
+            Debug.Log("WebGL 언어 파일 로딩 성공, JSON 파싱 시작");
+
+            try
+            {
+                ProcessJsonData(jsonText);
+                Debug.Log("JSON 파싱 완료");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"JSON 파싱 중 오류: {e.Message}");
+            }
         }
         else
         {
             Debug.LogError($"Error loading localization file: {www.error}");
         }
+
+        // WebGL에서 로딩 완료 후 초기화 완료 처리
+        CompleteInitialization();
     }
 
     // 언어 코드 얻기
