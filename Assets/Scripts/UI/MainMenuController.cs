@@ -10,5 +10,6 @@ public class MainMenuController : MonoBehaviour
     public void OnStartButtonClicked()
     {
         SceneChanger.Instance.LoadScene("MainScene");
+        GameManager.Instance.StartGame();
     }
 }

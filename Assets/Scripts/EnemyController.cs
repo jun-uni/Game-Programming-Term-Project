@@ -245,6 +245,10 @@ public class EnemyController : MonoBehaviour
 
                     Debug.Log("사망");
 
+                    // GameManager에 적 처치 점수 추가 알림
+                    if (GameManager.Instance != null && GameManager.Instance.IsGameActive())
+                        GameManager.Instance.AddEnemyKillScore();
+
                     // 죽으면 즉시 단어 비활성화
                     DisableWordDisplay();
 

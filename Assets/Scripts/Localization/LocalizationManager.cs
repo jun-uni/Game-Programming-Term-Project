@@ -121,7 +121,7 @@ public static class LocalizationManager
         }
 
         // 저장된 설정이 없으면 시스템 언어 감지
-        SystemLanguage deviceLanguage = Application.systemLanguage;
+        SystemLanguage deviceLanguage = SystemLanguage.English;
 
         // 지원하는 언어인지 확인
         if (SupportedLanguages.Contains(deviceLanguage))

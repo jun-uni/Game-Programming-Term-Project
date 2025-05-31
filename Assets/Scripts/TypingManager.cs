@@ -38,6 +38,10 @@ public class TypingManager : MonoBehaviour
 
     private void HandleInput()
     {
+        // 게임이 활성 상태가 아니면 입력 무시
+        if (GameManager.Instance != null && !GameManager.Instance.IsGameActive())
+            return;
+
         // 키보드 입력 감지
         foreach (char c in Input.inputString)
             if (c == '\b') // 백스페이스
@@ -142,6 +146,9 @@ public class TypingManager : MonoBehaviour
 
         isGlobalTypo = true;
         typoTimer = typoEffectDuration;
+
+        // GameManager에 전역 오타 발생 알림
+        if (GameManager.Instance != null) GameManager.Instance.AddGlobalTypo();
 
         // 개별 오타가 발생한 타겟들은 이미 TriggerIndividualTypo()로 리셋됨
         // 정상 진행 중인 타겟들은 그대로 유지
