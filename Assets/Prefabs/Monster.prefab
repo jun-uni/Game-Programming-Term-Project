@@ -465,9 +465,6 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1d769cabae1797647b727beb4ca5dabe, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4581499154125660515}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1d769cabae1797647b727beb4ca5dabe, type: 3}
-      insertIndex: -1
       addedObject: {fileID: -6691196794089225273}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1d769cabae1797647b727beb4ca5dabe, type: 3}
       insertIndex: -1
@@ -612,29 +609,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 1d769cabae1797647b727beb4ca5dabe, type: 3}
   m_PrefabInstance: {fileID: 5027314130653692122}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &4581499154125660515
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5261878100771700107}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 251fbc786f8f9c040b67413504871d40, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  monsterTransform: {fileID: 4777794658629003057}
-  agent: {fileID: -6691196794089225273}
-  animator: {fileID: 1490144165087608139}
-  leftHandCollider: {fileID: 6726879963153272394}
-  rightHandCollider: {fileID: 8447908769887704301}
-  state: 0
-  attackRange: 1.5
-  isDie: 0
-  hitPoint: 100
-  isAttackActive: 0
-  attackCooldown: 2
 --- !u!195 &-6691196794089225273
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -645,7 +619,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 2.8
+  m_Speed: 1
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120

@@ -148,10 +148,13 @@ public class WordTarget : MonoBehaviour
 
         Debug.Log($"단어 완성됨: {Word}");
 
+        // 단어 완성 이벤트 발생
+        WordCompletionEvents.TriggerWordCompleted(transform);
+
         // 타이핑 매니저에서 제거
         if (TypingManager.Instance != null) TypingManager.Instance.UnregisterTarget(this);
 
-        // 완성 효과 후 새로운 단어 할당 (1초 후)
+        // 완성 효과 후 새로운 단어 할당 (0.5초 후)
         StartCoroutine(AssignNewWordAfterDelay(0.5f));
     }
 
