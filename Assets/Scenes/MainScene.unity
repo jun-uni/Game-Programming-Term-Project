@@ -313,8 +313,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77f8a70178e946afba5deb9c07ee35d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentInput: 
   allowBackspace: 1
+  typoEffectDuration: 0.5
+  isGlobalTypo: 0
+  showDebugInfo: 0
 --- !u!4 &287065493
 Transform:
   m_ObjectHideFlags: 0
@@ -1368,42 +1370,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba0a1187b6a34c8198797a96e899fcc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  easyWords:
-  - cat
-  - dog
-  - run
-  - jump
-  - fire
-  - ice
-  - rock
-  - tree
-  - bird
-  - fish
-  mediumWords:
-  - house
-  - water
-  - green
-  - black
-  - white
-  - quick
-  - brave
-  - smart
-  - ghost
-  - magic
-  hardWords:
-  - dragon
-  - wizard
-  - castle
-  - forest
-  - lightning
-  - thunder
-  - crystal
-  - shadow
-  - warrior
-  - monster
+  easyWords: []
+  mediumWords: []
+  hardWords: []
+  allWords: []
+  easyMaxLength: 4
+  mediumMaxLength: 6
   easyWordChance: 0.5
   mediumWordChance: 0.3
   hardWordChance: 0.2
+  jsonFileName: english word list
+  showLoadingInfo: 1
 --- !u!4 &1320362555
 Transform:
   m_ObjectHideFlags: 0
@@ -38106,6 +38083,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3285545103768487474, guid: d47e79a856520144ca1c6b028d627557, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3285545103768487474, guid: d47e79a856520144ca1c6b028d627557, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3285545103768487474, guid: d47e79a856520144ca1c6b028d627557, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3285545103768487474, guid: d47e79a856520144ca1c6b028d627557, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3285545103768487474, guid: d47e79a856520144ca1c6b028d627557, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4777794658629003057, guid: d47e79a856520144ca1c6b028d627557, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.56
@@ -38150,8 +38147,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Monster
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 4378661066108594902, guid: d47e79a856520144ca1c6b028d627557, type: 3}
+    - target: {fileID: 8096324234993639155, guid: d47e79a856520144ca1c6b028d627557, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

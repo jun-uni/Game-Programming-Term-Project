@@ -3,32 +3,24 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    public float moveSpeed = 4f; // 걷기 속도
+    [Header("Movement Settings")] public float moveSpeed = 4f; // 걷기 속도
     public float runSpeed = 8f; // 뛰기 속도
 
-    [Header("Animation Smooth Settings")]
-    [Range(0.1f, 10f)]
+    [Header("Animation Smooth Settings")] [Range(0.1f, 10f)]
     public float moveBlendSpeed = 8f; // 이동 블렌딩 속도
 
-    [Range(0.1f, 10f)]
-    public float rotationBlendSpeed = 10f; // 회전 블렌딩 속도
+    [Range(0.1f, 10f)] public float rotationBlendSpeed = 10f; // 회전 블렌딩 속도
 
-    [Range(0.1f, 5f)]
-    public float animationSmoothTime = 0.15f; // 애니메이션 부드러움 정도
+    [Range(0.1f, 5f)] public float animationSmoothTime = 0.15f; // 애니메이션 부드러움 정도
 
-    [Header("Camera Settings")]
-    public Transform camTransform;
+    [Header("Camera Settings")] public Transform camTransform;
 
-    [Header("Hit Settings")]
-    [Range(0.5f, 5f)]
+    [Header("Hit Settings")] [Range(0.5f, 5f)]
     public float invincibleTime = 1.5f; // 무적 시간 (초)
 
-    [Range(0.1f, 1f)]
-    public float blinkInterval = 0.1f; // 무적 시 깜빡임 간격
+    [Range(0.1f, 1f)] public float blinkInterval = 0.1f; // 무적 시 깜빡임 간격
 
-    [Header("Components")]
-    private Animator animator;
+    [Header("Components")] private Animator animator;
     private Renderer[] renderers; // 깜빡임 효과를 위한 렌더러들
 
     private float currentHitPoint = 100;
@@ -64,14 +56,8 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("콜라이더 닿음!");
-
         // 무적 상태일 때는 피격 처리하지 않음
-        if (isInvincible)
-        {
-            Debug.Log("무적 상태라 피격 무시됨");
-            return;
-        }
+        if (isInvincible) return;
 
         // Enemy Hand 태그 확인
         if (other.CompareTag("Enemy Hand"))
@@ -80,17 +66,15 @@ public class PlayerController : MonoBehaviour
             EnemyController enemy = other.GetComponentInParent<EnemyController>();
 
             if (enemy != null)
-            {
                 // 실제 공격 판정이 활성화되어 있을 때만 피격 처리
                 if (enemy.isAttackActive && currentHitPoint > 0.0f)
                 {
                     currentHitPoint -= 10.0f;
-                    Debug.Log($"피격! 현재 체력: {currentHitPoint}");
+
 
                     // 피격 처리
                     OnHit(enemy.transform.position);
                 }
-            }
         }
     }
 
@@ -224,11 +208,9 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     private void SetRenderersEnabled(bool enabled)
     {
-        foreach (var renderer in renderers)
-        {
+        foreach (Renderer renderer in renderers)
             if (renderer != null)
                 renderer.enabled = enabled;
-        }
     }
 
     /// <summary>

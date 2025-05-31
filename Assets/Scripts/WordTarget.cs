@@ -8,10 +8,8 @@ public class WordTarget : MonoBehaviour
     private EnemyController enemyController;
 
     [Header("상태")] public bool IsCompleted { get; private set; } = false;
-    public bool IsTypoError { get; private set; } = false; // 오타 상태
 
-    [Header("타이핑 진행 상태")] public int LastMatchedLength { get; private set; } = 0;
-    public string LastMatchedInput { get; private set; } = "";
+    [Header("타이핑 진행 상태")] private int currentProgress = 0; // 현재 몇 글자까지 입력되었는지
 
     private void Start()
     {
@@ -23,7 +21,7 @@ public class WordTarget : MonoBehaviour
         AssignRandomWord();
 
         // 타이핑 매니저에 등록
-        TypingManager.Instance.RegisterTarget(this);
+        if (TypingManager.Instance != null) TypingManager.Instance.RegisterTarget(this);
     }
 
     private void OnEnable()
@@ -42,87 +40,103 @@ public class WordTarget : MonoBehaviour
 
     private void AssignRandomWord()
     {
-        Word = WordDatabase.Instance.GetRandomWord();
-        if (wordDisplay != null) wordDisplay.SetWord(Word);
+        if (WordDatabase.Instance != null)
+        {
+            Word = WordDatabase.Instance.GetRandomWord();
+            if (wordDisplay != null) wordDisplay.SetWord(Word);
+            ResetTypingProgress();
+        }
+    }
+
+    /// <summary>
+    /// 현재 위치에서 다음 글자로 입력된 문자를 받을 수 있는지 확인
+    /// </summary>
+    public bool CanAcceptNextChar(char inputChar)
+    {
+        if (string.IsNullOrEmpty(Word) || IsCompleted || currentProgress >= Word.Length) return false;
+
+        char expectedChar = char.ToLower(Word[currentProgress]);
+        char lowerInputChar = char.ToLower(inputChar);
+
+        return expectedChar == lowerInputChar;
+    }
+
+    /// <summary>
+    /// 글자를 수용하고 진행도 증가
+    /// </summary>
+    public void AcceptCharacter(char inputChar)
+    {
+        if (CanAcceptNextChar(inputChar))
+        {
+            currentProgress++;
+            UpdateDisplay();
+        }
+    }
+
+    /// <summary>
+    /// 개별 오타 발생 시 처리
+    /// </summary>
+    public void TriggerIndividualTypo()
+    {
+        if (TypingManager.Instance.showDebugInfo)
+            Debug.Log($"개별 오타: {Word} 리셋됨");
+
         ResetTypingProgress();
+    }
+
+    /// <summary>
+    /// 백스페이스 처리
+    /// </summary>
+    public void HandleBackspace()
+    {
+        if (currentProgress > 0)
+        {
+            currentProgress--;
+            UpdateDisplay();
+        }
+    }
+
+    /// <summary>
+    /// 현재 진행도 반환
+    /// </summary>
+    public int GetCurrentProgress()
+    {
+        return currentProgress;
+    }
+
+    /// <summary>
+    /// 단어가 완성되었는지 확인
+    /// </summary>
+    public bool IsWordCompleted()
+    {
+        return !IsCompleted && currentProgress >= Word.Length;
+    }
+
+    /// <summary>
+    /// 현재 타겟이 첫 글자를 기다리고 있는지 확인
+    /// </summary>
+    public bool IsWaitingForFirstChar()
+    {
+        return currentProgress == 0;
     }
 
     public void SetTypingProgress(int typedCharacters)
     {
-        LastMatchedLength = typedCharacters;
-        if (wordDisplay != null) wordDisplay.UpdateTypingProgress(typedCharacters);
+        currentProgress = Mathf.Clamp(typedCharacters, 0, Word?.Length ?? 0);
+        UpdateDisplay();
     }
 
     public void ResetTypingProgress()
     {
-        LastMatchedLength = 0;
-        LastMatchedInput = "";
-        if (wordDisplay != null)
-        {
-            wordDisplay.UpdateTypingProgress(0);
-            wordDisplay.ResetToDefaultColor();
-        }
+        currentProgress = 0;
+        UpdateDisplay();
+
+        if (wordDisplay != null) wordDisplay.ResetToDefaultColor();
     }
 
-
-    // 현재 입력이 이 단어와 매칭되는지 확인 (오타 체크 포함)
-    public bool CheckMatching(string currentInput, out int matchLength, out int startPosition)
+    private void UpdateDisplay()
     {
-        matchLength = 0;
-        startPosition = -1;
-
-        string targetWord = Word.ToLower();
-
-        // 입력 문자열의 모든 위치에서 이 단어 매칭 시도
-        for (int startPos = 0; startPos <= currentInput.Length - 1; startPos++)
-        {
-            int currentMatchLength = 0;
-            bool hasTypoInThisPosition = false;
-
-            // 해당 위치에서 단어 매칭 확인
-            for (int i = 0; i < targetWord.Length && startPos + i < currentInput.Length; i++)
-                if (currentInput[startPos + i] == targetWord[i])
-                {
-                    currentMatchLength++;
-                }
-                else
-                {
-                    // 이미 매칭이 시작된 상태에서 틀렸으면 오타
-                    if (currentMatchLength > 0)
-                    {
-                        hasTypoInThisPosition = true;
-                        ShowTypoEffect();
-                    }
-
-                    break;
-                }
-
-            // 이 위치에서 오타가 났지만, 다른 위치에서는 매칭될 수 있으므로 계속 확인
-            if (!hasTypoInThisPosition && currentMatchLength > 0)
-                // 유효한 매칭이 있으면 저장
-                if (currentMatchLength > matchLength)
-                {
-                    matchLength = currentMatchLength;
-                    startPosition = startPos;
-                }
-        }
-
-        return matchLength > 0;
-    }
-
-    public void ShowTypoEffect()
-    {
-        // 오타 효과 없이 바로 리셋만 수행
-        LastMatchedLength = 0;
-        LastMatchedInput = "";
-
-        if (wordDisplay != null)
-        {
-            wordDisplay.UpdateTypingProgress(0);
-            wordDisplay.ResetToDefaultColor();
-        }
-
-        Debug.Log($"오타 발생: {Word} - 진행상황 리셋됨");
+        if (wordDisplay != null) wordDisplay.UpdateTypingProgress(currentProgress);
     }
 
     public void OnWordCompleted()
@@ -132,14 +146,13 @@ public class WordTarget : MonoBehaviour
         // 시각적 효과
         if (wordDisplay != null) wordDisplay.ShowCompletionEffect();
 
-        // 적 처리는 외부에서 처리하도록 이벤트 발생
-        Debug.Log($"단어 완성됨: {Word} - 외부에서 적 처리 필요");
+        Debug.Log($"단어 완성됨: {Word}");
 
         // 타이핑 매니저에서 제거
-        TypingManager.Instance.UnregisterTarget(this);
+        if (TypingManager.Instance != null) TypingManager.Instance.UnregisterTarget(this);
 
         // 완성 효과 후 새로운 단어 할당 (1초 후)
-        StartCoroutine(AssignNewWordAfterDelay(1f));
+        StartCoroutine(AssignNewWordAfterDelay(0.5f));
     }
 
     private System.Collections.IEnumerator AssignNewWordAfterDelay(float delay)
@@ -147,13 +160,13 @@ public class WordTarget : MonoBehaviour
         yield return new WaitForSeconds(delay);
 
         // 적이 아직 살아있고 게임오브젝트가 활성화되어 있으면 새 단어 할당
-        if (gameObject.activeInHierarchy && !enemyController.isDie)
+        if (gameObject.activeInHierarchy && (enemyController == null || !enemyController.isDie))
         {
             IsCompleted = false;
             AssignRandomWord();
 
             // 타이핑 매니저에 다시 등록
-            TypingManager.Instance.RegisterTarget(this);
+            if (TypingManager.Instance != null) TypingManager.Instance.RegisterTarget(this);
         }
     }
 }

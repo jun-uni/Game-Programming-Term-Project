@@ -6,12 +6,14 @@ public class TypingManager : MonoBehaviour
 {
     public static TypingManager Instance;
 
-    [Header("현재 입력 상태")] public string currentInput = "";
-
     [Header("활성 타겟들")] private List<WordTarget> activeTargets = new();
-    private WordTarget currentTarget = null;
 
     [Header("입력 설정")] public bool allowBackspace = true;
+
+    [Header("전역 오타 설정")] public float typoEffectDuration = 0.5f;
+
+    [Header("오타 효과")] public bool isGlobalTypo = false;
+    private float typoTimer = 0f;
 
     [Header("디버그")] public bool showDebugInfo = true;
 
@@ -31,9 +33,7 @@ public class TypingManager : MonoBehaviour
     private void Update()
     {
         HandleInput();
-
-        // 디버그 정보 표시
-        if (showDebugInfo) Debug.Log($"Current Input: '{currentInput}' | Active Targets: {activeTargets.Count}");
+        HandleTypoEffect();
     }
 
     private void HandleInput()
@@ -42,126 +42,144 @@ public class TypingManager : MonoBehaviour
         foreach (char c in Input.inputString)
             if (c == '\b') // 백스페이스
             {
-                if (allowBackspace && currentInput.Length > 0)
-                {
-                    currentInput = currentInput.Substring(0, currentInput.Length - 1);
-                    ClearCurrentTarget();
-                    UpdateTargetMatching();
-                }
+                if (allowBackspace) HandleBackspace();
             }
             else if (char.IsLetter(c)) // 영문자만 허용
             {
-                currentInput += char.ToLower(c);
-                UpdateTargetMatching();
+                ProcessSingleCharacter(char.ToLower(c));
             }
     }
 
-    private void UpdateTargetMatching()
+    private void HandleBackspace()
     {
-        if (string.IsNullOrEmpty(currentInput))
-        {
-            // 입력이 없으면 모든 타겟 초기화 (오타 상태는 유지)
-            ClearCurrentTarget();
-            return;
-        }
+        // 모든 타겟에서 마지막 글자 제거
+        foreach (WordTarget target in activeTargets) target.HandleBackspace();
 
-        // 각 타겟별로 개별 매칭 확인
-        WordTarget bestTarget = null;
-        int bestMatchLength = 0;
-        int bestStartPos = -1;
+        if (showDebugInfo)
+            Debug.Log("백스페이스 처리됨");
+    }
+
+    private void ProcessSingleCharacter(char inputChar)
+    {
+        if (showDebugInfo)
+            Debug.Log($"새 글자 입력: '{inputChar}'");
+
+        // 모든 타겟의 이전 진행도 저장
+        Dictionary<WordTarget, int> previousProgress = new();
+        foreach (WordTarget target in activeTargets) previousProgress[target] = target.GetCurrentProgress();
+
+        // 각 타겟이 이 글자를 처리할 수 있는지 확인
+        Dictionary<WordTarget, int> individualTypoTargets = new();
+        List<WordTarget> acceptingTargets = new();
 
         foreach (WordTarget target in activeTargets)
         {
-            int matchLength;
-            int startPos;
+            bool canAccept = target.CanAcceptNextChar(inputChar);
 
-            // 각 타겟의 개별 매칭 확인 (오타 체크 포함)
-            bool hasMatch = target.CheckMatching(currentInput, out matchLength, out startPos);
-
-            if (hasMatch && matchLength > 0)
+            if (canAccept)
             {
-                // 완전 매칭된 단어가 있으면 즉시 완성 처리
-                if (matchLength == target.Word.Length)
-                {
-                    CompleteWord(target, startPos, target.Word.Length);
-                    return;
-                }
+                // 이 타겟은 글자를 받을 수 있음
+                target.AcceptCharacter(inputChar);
+                acceptingTargets.Add(target);
 
-                // 가장 긴 매칭을 찾기 (같은 길이면 더 가까운 적 우선)
-                if (matchLength > bestMatchLength ||
-                    (matchLength == bestMatchLength && bestTarget != null &&
-                     Vector3.Distance(Camera.main.transform.position, target.transform.position) <
-                     Vector3.Distance(Camera.main.transform.position, bestTarget.transform.position)))
+                if (showDebugInfo)
+                    Debug.Log(
+                        $"{target.Word}: '{inputChar}' 수용, 진행도 {previousProgress[target]} → {target.GetCurrentProgress()}");
+            }
+            else
+            {
+                // 이 타겟은 글자를 받을 수 없음 - 개별 오타
+                int prevProgress = previousProgress[target];
+                if (prevProgress > 0) // 진행 중이었다면 개별 오타
                 {
-                    bestTarget = target;
-                    bestMatchLength = matchLength;
-                    bestStartPos = startPos;
+                    individualTypoTargets[target] = prevProgress;
+                    target.TriggerIndividualTypo();
+
+                    if (showDebugInfo)
+                        Debug.Log($"{target.Word}: '{inputChar}' 개별 오타, 진행도 {prevProgress} → 0");
                 }
             }
         }
 
-        // 가장 좋은 매칭 설정
-        if (bestTarget != null && bestMatchLength > 0)
+        // 전역 오타 체크 (6번 규칙)
+        if (CheckGlobalTypo(individualTypoTargets, acceptingTargets))
         {
-            if (currentTarget != bestTarget)
+            TriggerGlobalTypo();
+            return;
+        }
+
+        // 완성된 단어 체크
+        CheckCompletedWords();
+    }
+
+    private bool CheckGlobalTypo(Dictionary<WordTarget, int> individualTypoTargets, List<WordTarget> acceptingTargets)
+    {
+        // 개별 오타가 없으면 전역 오타 아님
+        if (individualTypoTargets.Count == 0)
+            return false;
+
+        // 6번 규칙: 개별 오타가 발생한 타겟들의 이전 진행도 중 최대값
+        int maxTypoProgress = individualTypoTargets.Values.Max();
+
+        // 개별 오타가 발생하지 않은 타겟들 중에서 더 진행된 것이 있는지 확인
+        foreach (WordTarget target in acceptingTargets)
+            if (target.GetCurrentProgress() > maxTypoProgress)
             {
-                ClearCurrentTarget();
-                SetCurrentTarget(bestTarget);
+                if (showDebugInfo)
+                    Debug.Log(
+                        $"전역 오타 회피: {target.Word}가 더 진행됨 (진행도: {target.GetCurrentProgress()}, 오타 최대 진행도: {maxTypoProgress})");
+                return false;
             }
 
-            bestTarget.SetTypingProgress(bestMatchLength);
-        }
-        else
+        if (showDebugInfo)
+            Debug.Log($"전역 오타 발생: 6번 규칙 적용 (개별 오타 최대 진행도: {maxTypoProgress})");
+        return true; // 전역 오타
+    }
+
+    private void TriggerGlobalTypo()
+    {
+        Debug.LogError("전역 오타 발생!");
+
+        isGlobalTypo = true;
+        typoTimer = typoEffectDuration;
+
+        // 개별 오타가 발생한 타겟들은 이미 TriggerIndividualTypo()로 리셋됨
+        // 정상 진행 중인 타겟들은 그대로 유지
+
+        // 여기에 전역 오타 시각/음향 효과 추가 가능
+    }
+
+    private void HandleTypoEffect()
+    {
+        if (isGlobalTypo)
         {
-            ClearCurrentTarget();
+            typoTimer -= Time.deltaTime;
+            if (typoTimer <= 0f)
+            {
+                isGlobalTypo = false;
+                if (showDebugInfo)
+                    Debug.Log("전역 오타 효과 종료");
+            }
         }
     }
 
-    private void SetCurrentTarget(WordTarget target)
+    private void CheckCompletedWords()
     {
-        currentTarget = target;
+        List<WordTarget> completedTargets = new();
+
+        foreach (WordTarget target in activeTargets)
+            if (target.IsWordCompleted())
+                completedTargets.Add(target);
+
+        foreach (WordTarget completedTarget in completedTargets) CompleteWord(completedTarget);
     }
 
-    private void ClearCurrentTarget()
+    private void CompleteWord(WordTarget target)
     {
-        if (currentTarget != null)
-        {
-            currentTarget.SetTypingProgress(0);
-            currentTarget = null;
-        }
-    }
+        if (showDebugInfo)
+            Debug.Log($"단어 완성: {target.Word}");
 
-    private void ClearAllTargets()
-    {
-        foreach (WordTarget target in activeTargets) target.ResetTypingProgress();
-        currentTarget = null;
-    }
-
-    private void ResetAllTargetsProgress()
-    {
-        foreach (WordTarget target in activeTargets) target.ResetTypingProgress();
-        currentTarget = null;
-    }
-
-    private void CompleteWord(WordTarget target, int startPos, int wordLength)
-    {
-        Debug.Log($"단어 완성: {target.Word} (위치: {startPos})");
-
-        // 타겟 처리 (투사체 발사 등은 나중에 구현)
         target.OnWordCompleted();
-
-        // 완성된 단어 부분만 입력에서 제거
-        string before = currentInput.Substring(0, startPos);
-        string after = currentInput.Substring(startPos + wordLength);
-        currentInput = before + after;
-
-        Debug.Log($"남은 입력: '{currentInput}'");
-
-        // 타겟 초기화
-        ClearCurrentTarget();
-
-        // 남은 입력이 있으면 다시 매칭 시도
-        if (!string.IsNullOrEmpty(currentInput)) UpdateTargetMatching();
     }
 
     public void RegisterTarget(WordTarget target)
@@ -171,11 +189,11 @@ public class TypingManager : MonoBehaviour
 
     public void UnregisterTarget(WordTarget target)
     {
-        if (activeTargets.Contains(target))
-        {
-            activeTargets.Remove(target);
+        if (activeTargets.Contains(target)) activeTargets.Remove(target);
+    }
 
-            if (currentTarget == target) currentTarget = null;
-        }
+    public bool IsGlobalTypo()
+    {
+        return isGlobalTypo;
     }
 }

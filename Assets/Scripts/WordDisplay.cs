@@ -4,17 +4,14 @@ using TMPro;
 
 public class WordDisplay : MonoBehaviour
 {
-    [Header("UI 컴포넌트")]
-    public Canvas worldCanvas;
+    [Header("UI 컴포넌트")] public Canvas worldCanvas;
     public TextMeshProUGUI wordText;
 
-    [Header("색상 설정")]
-    public Color defaultColor = Color.white;
+    [Header("색상 설정")] public Color defaultColor = Color.white;
     public Color typingColor = Color.yellow;
     public Color completedColor = Color.green;
 
-    [Header("애니메이션")]
-    public float bounceScale = 1.2f;
+    [Header("애니메이션")] public float bounceScale = 1.2f;
     public float animationDuration = 0.2f;
 
     private string currentWord;
@@ -28,21 +25,6 @@ public class WordDisplay : MonoBehaviour
 
         worldCanvas.renderMode = RenderMode.WorldSpace;
         worldCanvas.worldCamera = Camera.main;
-
-        // Canvas 크기와 스케일 설정
-        RectTransform canvasRect = worldCanvas.GetComponent<RectTransform>();
-        canvasRect.sizeDelta = new Vector2(200f, 50f); // Canvas 내부 크기
-        canvasRect.localScale = new Vector3(0.01f, 0.01f, 0.01f); // 실제 월드 크기를 작게
-
-        // 적군 머리 위 적절한 높이에 위치 (부모 오브젝트 기준)
-        canvasRect.localPosition = new Vector3(0f, 2.2f, 0f); // Y값 조정으로 높이 설정
-
-        // 텍스트 설정
-        if (wordText != null)
-        {
-            wordText.fontSize = 36f; // Canvas 스케일이 0.01이므로 큰 폰트 사이즈 필요
-            wordText.alignment = TextAlignmentOptions.Center;
-        }
     }
 
     private void Update()
@@ -74,25 +56,15 @@ public class WordDisplay : MonoBehaviour
 
         // 입력된 글자가 없으면 전체를 기본 색상으로
         if (typedCharacters <= 0)
-        {
             displayText = $"<color=#{ColorUtility.ToHtmlStringRGB(defaultColor)}>{currentWord}</color>";
-        }
         else
-        {
             for (int i = 0; i < currentWord.Length; i++)
-            {
                 if (i < typedCharacters)
-                {
                     // 입력된 글자는 노란색
                     displayText += $"<color=#{ColorUtility.ToHtmlStringRGB(typingColor)}>{currentWord[i]}</color>";
-                }
                 else
-                {
                     // 아직 입력되지 않은 글자는 기본 색상
                     displayText += $"<color=#{ColorUtility.ToHtmlStringRGB(defaultColor)}>{currentWord[i]}</color>";
-                }
-            }
-        }
 
         wordText.text = displayText;
     }
@@ -106,10 +78,12 @@ public class WordDisplay : MonoBehaviour
         // 완성 애니메이션 - 원래 스케일 기준으로 상대적 크기 조정
         LeanTween.scale(gameObject, bounceTargetScale, animationDuration / 2)
             .setEase(LeanTweenType.easeOutBack)
-            .setOnComplete(() => {
+            .setOnComplete(() =>
+            {
                 LeanTween.scale(gameObject, originalScale, animationDuration / 2)
                     .setEase(LeanTweenType.easeInBack)
-                    .setOnComplete(() => {
+                    .setOnComplete(() =>
+                    {
                         // 애니메이션 완료 후 기본 색상으로 복원
                         ResetToDefaultColor();
                     });
@@ -129,5 +103,4 @@ public class WordDisplay : MonoBehaviour
             typedCharacters = 0; // 진행상황도 초기화
         }
     }
-
 }
