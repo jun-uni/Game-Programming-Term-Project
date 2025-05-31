@@ -191,13 +191,11 @@ public class MagicProjectile : MonoBehaviour
         EnemyController enemyController = target.GetComponent<EnemyController>();
         if (enemyController != null)
         {
-            enemyController.hitPoint -= (int)damage;
+            // OnHit 메서드를 통해 피격 처리 (데미지 적용과 애니메이션 재생 포함)
+            enemyController.OnHit((int)damage);
 
             if (showDebugInfo)
-                Debug.Log($"{target.name}에게 {damage} 데미지 적용. 남은 체력: {enemyController.hitPoint}");
-
-            // 체력이 0 이하가 되면 사망 처리
-            if (enemyController.hitPoint <= 0) enemyController.state = EnemyState.DIE;
+                Debug.Log($"{target.name}에게 {damage} 데미지 적용");
         }
     }
 

@@ -1298,7 +1298,7 @@ MonoBehaviour:
   player: {fileID: 1265586272}
   showGizmoAlways: 0
   enemyPool: []
-  maxEnemyCount: 40
+  maxEnemyCount: 5
 --- !u!4 &913440475
 Transform:
   m_ObjectHideFlags: 0

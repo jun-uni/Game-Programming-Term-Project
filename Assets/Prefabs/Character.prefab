@@ -172,6 +172,11 @@ MonoBehaviour:
   hitSoundVolume: 0.4
   maxAttackQueue: 3
   allowAttackQueue: 1
+  respawnDelay: 3
+  respawnPosition: {x: 0, y: 0, z: 0}
+  autoRespawn: 0
+  deathSoundClip: {fileID: 0}
+  deathSoundVolume: 1
   showDebugInfo: 1
   animator: {fileID: 8806933253480899900}
 --- !u!54 &7579798645395783635

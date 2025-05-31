@@ -14,6 +14,11 @@ public enum EnemyState
     ATTACK,
 
     /// <summary>
+    /// 피격 상태.
+    /// </summary>
+    HIT,
+
+    /// <summary>
     /// 사망 상태.
     /// </summary>
     DIE

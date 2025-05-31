@@ -671,12 +671,16 @@ MonoBehaviour:
   animator: {fileID: 1490144165087608139}
   leftHandCollider: {fileID: 6726879963153272394}
   rightHandCollider: {fileID: 8447908769887704301}
+  wordTarget: {fileID: 1646469857423944358}
+  wordDisplay: {fileID: 7675610689716775249}
   state: 0
   attackRange: 1.5
   isDie: 0
   hitPoint: 100
   isAttackActive: 0
   attackCooldown: 2
+  isHit: 0
+  hitDuration: 0.8
 --- !u!114 &1646469857423944358
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -57,6 +57,23 @@ public class PlayerController : MonoBehaviour
     private Queue<Transform> attackQueue = new();
     private bool isProcessingQueue = false;
 
+    [Header("Death Settings")] [SerializeField]
+    private float respawnDelay = 3f;
+
+    [SerializeField] private Vector3 respawnPosition = Vector3.zero;
+    [SerializeField] private bool autoRespawn = true;
+    private static readonly int DeathTrigger = Animator.StringToHash("Death");
+    private static readonly int IsAliveBool = Animator.StringToHash("IsAlive");
+
+    private float maxHitPoint = 100;
+    private bool isDead = false;
+    public static System.Action OnPlayerDeath;
+
+    [Header("Death Sound Settings")] [SerializeField]
+    private AudioClip deathSoundClip;
+
+    [SerializeField] private float deathSoundVolume = 1f;
+
     [Header("Debug")] [SerializeField] private bool showDebugInfo = true;
 
     [Header("Components")] [SerializeField]
@@ -110,6 +127,8 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (isDead) return; // 죽은 상태에서는 입력 무시
+
         HandleInput();
         HandleMovement();
         HandleAnimation();
@@ -117,8 +136,8 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // 무적 상태일 때는 피격 처리하지 않음
-        if (isInvincible) return;
+        // 무적 상태이거나 죽은 상태일 때는 피격 처리하지 않음
+        if (isInvincible || isDead) return;
 
         // Enemy Hand 태그 확인
         if (other.CompareTag("Enemy Hand"))
@@ -131,8 +150,13 @@ public class PlayerController : MonoBehaviour
                 if (enemy.isAttackActive && currentHitPoint > 0.0f)
                 {
                     currentHitPoint -= 10.0f;
-                    // 피격 처리
-                    OnHit(enemy.transform.position);
+
+                    // 체력이 0 이하가 되면 죽음 처리
+                    if (currentHitPoint <= 0)
+                        OnDeath();
+                    else
+                        // 피격 처리
+                        OnHit(enemy.transform.position);
                 }
         }
     }
@@ -620,7 +644,6 @@ public class PlayerController : MonoBehaviour
     private System.Collections.IEnumerator InvincibleCoroutine()
     {
         isInvincible = true;
-        Debug.Log("무적 상태 시작");
 
         // 깜빡임 효과 시작
         StartCoroutine(BlinkEffect());
@@ -633,8 +656,6 @@ public class PlayerController : MonoBehaviour
 
         // 렌더러를 다시 보이게 설정 (깜빡임 효과 종료)
         SetRenderersEnabled(true);
-
-        Debug.Log("무적 상태 종료");
     }
 
     /// <summary>
@@ -677,6 +698,152 @@ public class PlayerController : MonoBehaviour
 
         // 원래 설정으로 복구
         animationSmoothTime = originalSmoothTime;
+    }
+
+    #endregion
+
+    #region Death System
+
+    /// <summary>
+    /// 플레이어 죽음 처리
+    /// </summary>
+    private void OnDeath()
+    {
+        if (isDead) return; // 이미 죽은 상태면 무시
+
+        isDead = true;
+        currentHitPoint = 0;
+
+        if (showDebugInfo)
+            Debug.Log("플레이어 사망!");
+
+        // 현재 진행 중인 모든 행동 중단
+        StopAllActions();
+
+        // 죽음 사운드 재생
+        PlayDeathSound();
+
+        // 죽음 애니메이션 재생
+        animator.SetBool(IsAliveBool, false);
+        animator.SetTrigger(DeathTrigger);
+
+        // 부활 처리 시작
+        if (autoRespawn) StartCoroutine(RespawnCoroutine());
+
+        // 죽음 이벤트 발생 (다른 시스템에서 사용 가능)
+        OnPlayerDeath?.Invoke();
+    }
+
+    /// <summary>
+    /// 모든 행동 중단
+    /// </summary>
+    private void StopAllActions()
+    {
+        // 캐스팅 중단
+        if (isCasting) ForceCastComplete();
+
+        // 공격 큐 초기화
+        attackQueue.Clear();
+        isProcessingQueue = false;
+
+        // 무적 상태 해제
+        if (isInvincible)
+        {
+            StopCoroutine(InvincibleCoroutine());
+            StopCoroutine(BlinkEffect());
+            isInvincible = false;
+            SetRenderersEnabled(true);
+        }
+
+        // 이동 파라미터 초기화
+        currentInput = Vector2.zero;
+        targetAnimParams = Vector2.zero;
+        currentAnimParams = Vector2.zero;
+    }
+
+    /// <summary>
+    /// 부활 코루틴
+    /// </summary>
+    private System.Collections.IEnumerator RespawnCoroutine()
+    {
+        if (showDebugInfo)
+            Debug.Log($"부활까지 {respawnDelay}초 대기...");
+
+        // 부활 대기
+        yield return new WaitForSeconds(respawnDelay);
+
+        // 부활 처리
+        Respawn();
+    }
+
+    /// <summary>
+    /// 플레이어 부활
+    /// </summary>
+    public void Respawn()
+    {
+        if (showDebugInfo)
+            Debug.Log("플레이어 부활!");
+
+        // 상태 초기화
+        isDead = false;
+        currentHitPoint = maxHitPoint;
+        isInvincible = false;
+
+        // 위치 초기화
+        transform.position = respawnPosition;
+        transform.rotation = Quaternion.identity;
+
+        // 애니메이터 상태 초기화
+        animator.SetBool(IsAliveBool, true);
+
+        // 렌더러 활성화
+        SetRenderersEnabled(true);
+
+        // 잠시 무적 시간 부여 (부활 직후 보호)
+        StartCoroutine(RespawnInvincibility());
+    }
+
+    /// <summary>
+    /// 부활 직후 무적 시간
+    /// </summary>
+    private System.Collections.IEnumerator RespawnInvincibility()
+    {
+        isInvincible = true;
+
+        if (showDebugInfo)
+            Debug.Log("부활 보호 무적 시작");
+
+        // 깜빡임 효과
+        StartCoroutine(BlinkEffect());
+
+        // 부활 보호 시간 (조금 더 길게)
+        yield return new WaitForSeconds(invincibleTime * 2f);
+
+        // 무적 해제
+        isInvincible = false;
+        SetRenderersEnabled(true);
+
+        if (showDebugInfo)
+            Debug.Log("부활 보호 무적 종료");
+    }
+
+    /// <summary>
+    /// 죽음 소리 재생
+    /// </summary>
+    private void PlayDeathSound()
+    {
+        if (deathSoundClip != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(deathSoundClip, deathSoundVolume);
+
+            if (showDebugInfo)
+                Debug.Log($"Death Sound 재생: {deathSoundClip.name}");
+        }
+        else if (showDebugInfo)
+        {
+            if (deathSoundClip == null)
+                Debug.LogWarning("Death Sound Clip이 설정되지 않았습니다.");
+        }
     }
 
     #endregion
