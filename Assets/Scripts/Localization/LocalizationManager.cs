@@ -3,15 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using System.Linq;
-using Newtonsoft.Json;
 
-// 게임 매니저와 통합할 수 있는 정적 클래스 버전의 LocalizationManager
+// WebGL 완전 호환 버전 (JsonUtility 문제 해결)
 [DefaultExecutionOrder(-100)]
 public static class LocalizationManager
 {
     private static SystemLanguage systemLanguage;
-
     private static SystemLanguage gameLanguage;
 
     public static SystemLanguage GameLanguage => gameLanguage;
@@ -24,18 +21,22 @@ public static class LocalizationManager
             if (systemLanguage != value)
             {
                 systemLanguage = value;
-                OnLanguageChanged?.Invoke(systemLanguage);
+                try
+                {
+                    OnLanguageChanged?.Invoke(systemLanguage);
+                }
+                catch
+                {
+                    // 이벤트 에러 무시
+                }
             }
         }
     }
 
-
     public delegate void LanguageChangedHandler(SystemLanguage newLanguage);
 
     public static event LanguageChangedHandler OnLanguageChanged;
-
     public static event Action OnLanguageInitialized;
-
 
     // 로컬라이제이션 데이터
     private static Dictionary<string, Dictionary<string, string>> localizedTexts = new();
@@ -43,45 +44,224 @@ public static class LocalizationManager
     // 초기화 완료 여부
     private static bool isInitialized = false;
     private static bool isInitializing = false;
-
     public static bool IsInitialized => isInitialized;
 
-    // 지원하는 언어 목록 (일본어 제외)
+    // 지원하는 언어 목록
     public static List<SystemLanguage> SupportedLanguages { get; } = new()
     {
         SystemLanguage.English, SystemLanguage.Korean, SystemLanguage.Spanish, SystemLanguage.French
     };
 
-    // 매니저 초기화 (게임 매니저 Start에서 호출)
+    // 매니저 초기화 (WebGL 완전 호환)
     public static void Initialize(MonoBehaviour coroutineRunner)
     {
-        if (isInitialized || isInitializing)
+        if (isInitialized)
+        {
+            Debug.Log("LocalizationManager가 이미 초기화되었습니다.");
             return;
+        }
+
+        if (isInitializing)
+        {
+            Debug.LogWarning("LocalizationManager가 초기화 중입니다.");
+            return;
+        }
 
         isInitializing = true;
-        Debug.Log("LocalizationManager 초기화 시작");
+        Debug.Log("LocalizationManager 초기화 시작 (WebGL 안전 버전)");
 
-        // 시스템 언어 감지 또는 저장된 설정 불러오기
-        LoadSystemLanguage();
-        LoadGameLanguage();
-
-        // 언어 파일 로딩
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Language.json");
-
-        if (Application.platform == RuntimePlatform.WebGLPlayer)
+        try
         {
-            // WebGL에서는 코루틴 완료 후 초기화 완료 처리
-            coroutineRunner.StartCoroutine(LoadLocalizedTextWebGL(filePath));
+            LoadSystemLanguage();
+            LoadGameLanguage();
+
+            // JSON 로딩을 피하고 하드코딩된 데이터 사용 (WebGL 안전성)
+            LoadHardcodedData();
+            CompleteInitialization();
         }
-        else
+        catch
         {
-            // 일반 플랫폼에서는 동기적으로 로딩 후 즉시 초기화 완료
-            LoadLocalizedText(filePath);
+            Debug.LogError("LocalizationManager 초기화 실패 - 기본 데이터 사용");
+            isInitializing = false;
+            LoadFallbackData();
             CompleteInitialization();
         }
     }
 
-    // 초기화 완료 처리를 별도 메서드로 분리
+    // 하드코딩된 데이터 (WebGL에서 가장 안전)
+    private static void LoadHardcodedData()
+    {
+        localizedTexts.Clear();
+
+        // ui.settings.systemlanguage
+        localizedTexts["ui.settings.systemlanguage"] = new Dictionary<string, string>
+        {
+            ["ko"] = "시스템 언어 :",
+            ["eng"] = "System Language :",
+            ["es"] = "Idioma del sistema:",
+            ["fr"] = "Langue du système :"
+        };
+
+        // ui.settings.gamelanguage
+        localizedTexts["ui.settings.gamelanguage"] = new Dictionary<string, string>
+        {
+            ["ko"] = "게임 언어 :",
+            ["eng"] = "Game Language :",
+            ["es"] = "Idioma del juego:",
+            ["fr"] = "Langue du jeu :"
+        };
+
+        // ui.settings.confirm
+        localizedTexts["ui.settings.confirm"] = new Dictionary<string, string>
+        {
+            ["ko"] = "확인", ["eng"] = "Confirm", ["es"] = "Confirmar", ["fr"] = "Confirmer"
+        };
+
+        // ui.settings.cancel
+        localizedTexts["ui.settings.cancel"] = new Dictionary<string, string>
+        {
+            ["ko"] = "취소", ["eng"] = "Cancel", ["es"] = "Cancelar", ["fr"] = "Annuler"
+        };
+
+        // ui.main.start
+        localizedTexts["ui.main.start"] = new Dictionary<string, string>
+        {
+            ["ko"] = "게임 시작", ["eng"] = "Game Start", ["es"] = "Iniciar juego", ["fr"] = "Démarrer le jeu"
+        };
+
+        // ui.main.settings
+        localizedTexts["ui.main.settings"] = new Dictionary<string, string>
+        {
+            ["ko"] = "환경 설정", ["eng"] = "Settings", ["es"] = "Configuración", ["fr"] = "Paramètres"
+        };
+
+        // ui.main.credits
+        localizedTexts["ui.main.credits"] = new Dictionary<string, string>
+        {
+            ["ko"] = "크레딧", ["eng"] = "Credits", ["es"] = "Créditos", ["fr"] = "Crédits"
+        };
+
+        // ui.credits.close
+        localizedTexts["ui.credits.close"] = new Dictionary<string, string>
+        {
+            ["ko"] = "닫기", ["eng"] = "Close", ["es"] = "Cerrar", ["fr"] = "Fermer"
+        };
+
+        // ui.how.first
+        localizedTexts["ui.how.first"] = new Dictionary<string, string>
+        {
+            ["ko"] = "원할한 게임을 위해 Google Chrome\n브라우저에서 플레이해주시기 바랍니다.\n\n타 브라우저에서는 원활하게 조작되지\n않을 수도 있습니다.",
+            ["eng"] =
+                "For the best experience, please play using the Google Chrome browser.\n\nOther browsers may not work properly.",
+            ["es"] =
+                "Para una mejor experiencia, se recomienda jugar en el navegador Google Chrome.\n\nOtros navegadores pueden no funcionar correctamente.",
+            ["fr"] =
+                "Pour une meilleure expérience, veuillez jouer avec le navigateur Google Chrome.\n\nD'autres navigateurs peuvent ne pas fonctionner correctement."
+        };
+
+        // ui.settings.volume
+        localizedTexts["ui.settings.volume"] = new Dictionary<string, string>
+        {
+            ["ko"] = "음량 :", ["eng"] = "Volume :", ["es"] = "Volumen :", ["fr"] = "Volume :"
+        };
+
+        // ui.how.second.move
+        localizedTexts["ui.how.second.move"] = new Dictionary<string, string>
+        {
+            ["ko"] = "방향키로 이동",
+            ["eng"] = "Use arrow keys to move",
+            ["es"] = "Mover con las flechas",
+            ["fr"] = "Se déplacer avec les flèches"
+        };
+
+        // ui.how.second.dash
+        localizedTexts["ui.how.second.dash"] = new Dictionary<string, string>
+        {
+            ["ko"] = "Shift로 대쉬",
+            ["eng"] = "Press Shift to dash",
+            ["es"] = "Presiona Shift para correr",
+            ["fr"] = "Appuyez sur Shift pour sprinter"
+        };
+
+        // ui.how.second.attack
+        localizedTexts["ui.how.second.attack"] = new Dictionary<string, string>
+        {
+            ["ko"] = "TYPE로 공격",
+            ["eng"] = "TYPE to attack",
+            ["es"] = "Escribe para atacar",
+            ["fr"] = "Tapez pour attaquer"
+        };
+
+        // ui.main.how
+        localizedTexts["ui.main.how"] = new Dictionary<string, string>
+        {
+            ["ko"] = "조작법", ["eng"] = "How to Play", ["es"] = "Cómo jugar", ["fr"] = "Comment jouer"
+        };
+
+        // ui.gameover.title
+        localizedTexts["ui.gameover.title"] = new Dictionary<string, string>
+        {
+            ["ko"] = "게임 오버", ["eng"] = "Game Over", ["es"] = "Juego terminado", ["fr"] = "Jeu terminé"
+        };
+
+        // ui.gameover.score
+        localizedTexts["ui.gameover.score"] = new Dictionary<string, string>
+        {
+            ["ko"] = "점수 : {0}", ["eng"] = "Score : {0}", ["es"] = "Puntuación: {0}", ["fr"] = "Score : {0}"
+        };
+
+        // ui.gameover.highscore
+        localizedTexts["ui.gameover.highscore"] = new Dictionary<string, string>
+        {
+            ["ko"] = "최고 점수 : {0}",
+            ["eng"] = "High Score : {0}",
+            ["es"] = "Puntuación más alta: {0}",
+            ["fr"] = "Meilleur score : {0}"
+        };
+
+        // ui.victory.title
+        localizedTexts["ui.victory.title"] = new Dictionary<string, string>
+        {
+            ["ko"] = "승리!", ["eng"] = "Victory!", ["es"] = "¡Victoria!", ["fr"] = "Victoire !"
+        };
+
+        // ui.victory.score
+        localizedTexts["ui.victory.score"] = new Dictionary<string, string>
+        {
+            ["ko"] = "점수 : {0}", ["eng"] = "Score : {0}", ["es"] = "Puntuación: {0}", ["fr"] = "Score : {0}"
+        };
+
+        // ui.victory.highscore
+        localizedTexts["ui.victory.highscore"] = new Dictionary<string, string>
+        {
+            ["ko"] = "최고 점수 : {0}",
+            ["eng"] = "High Score : {0}",
+            ["es"] = "Puntuación más alta: {0}",
+            ["fr"] = "Meilleur score : {0}"
+        };
+
+        // ui.victory.typo
+        localizedTexts["ui.victory.typo"] = new Dictionary<string, string>
+        {
+            ["ko"] = "오타 개수 : {0}",
+            ["eng"] = "Typos Count : {0}",
+            ["es"] = "Errores tipográficos: {0}",
+            ["fr"] = "Fautes de frappe : {0}"
+        };
+
+        // ui.how.second.dash2
+        localizedTexts["ui.how.second.dash2"] = new Dictionary<string, string>
+        {
+            ["ko"] = "대쉬하는 동안 스태미너를 소모합니다.\n단어를 올바르게 입력하면 스태미너를 회복합니다.",
+            ["eng"] = "Dashing consumes stamina.\nYou can recover stamina by typing words correctly.",
+            ["es"] = "Correr consume energía.\nEscribe correctamente las palabras para recuperarla.",
+            ["fr"] = "Sprinter consomme de l'endurance.\nTapez correctement les mots pour la récupérer."
+        };
+
+        Debug.Log($"하드코딩 데이터 로드 완료 - {localizedTexts.Count}개 키");
+    }
+
+    // 초기화 완료 처리
     private static void CompleteInitialization()
     {
         if (isInitialized)
@@ -90,224 +270,151 @@ public static class LocalizationManager
             return;
         }
 
+        if (localizedTexts.Count == 0)
+        {
+            Debug.LogWarning("로컬라이제이션 데이터가 없습니다. 기본 데이터를 로드합니다.");
+            LoadFallbackData();
+        }
+
         isInitialized = true;
         isInitializing = false;
 
-        Debug.Log("LocalizationManager 초기화 완료");
+        Debug.Log($"LocalizationManager 초기화 완료 - {localizedTexts.Count}개 키 로드됨");
 
-        // 초기화 완료 이벤트 발생
         try
         {
             OnLanguageInitialized?.Invoke();
         }
-        catch (Exception e)
+        catch
         {
-            Debug.LogError($"OnLanguageInitialized 이벤트 처리 중 오류: {e.Message}");
+            // 이벤트 에러 무시
         }
     }
 
-    // 시스템 언어 감지 또는 설정 불러오기
+    // 시스템 언어 로드
     private static void LoadSystemLanguage()
     {
-        // PlayerPrefs에서 저장된 언어 설정 확인
-        if (PlayerPrefs.HasKey("SystemLanguage"))
+        try
         {
-            string savedLanguage = PlayerPrefs.GetString("SystemLanguage");
-            if (Enum.TryParse(savedLanguage, out SystemLanguage language))
+            if (PlayerPrefs.HasKey("SystemLanguage"))
             {
-                systemLanguage = language;
-                Debug.Log("시스템 언어 불러옴" + systemLanguage.ToString());
-
-                return;
+                string savedLanguage = PlayerPrefs.GetString("SystemLanguage");
+                if (Enum.TryParse(savedLanguage, out SystemLanguage language))
+                {
+                    systemLanguage = language;
+                    Debug.Log("시스템 언어 불러옴: " + systemLanguage.ToString());
+                    return;
+                }
             }
+
+            SystemLanguage deviceLanguage = Application.systemLanguage;
+            systemLanguage = SupportedLanguages.Contains(deviceLanguage) ? deviceLanguage : SystemLanguage.English;
+
+            PlayerPrefs.SetString("SystemLanguage", systemLanguage.ToString());
+            PlayerPrefs.Save();
         }
-
-        // 저장된 설정이 없으면 시스템 언어 감지
-        SystemLanguage deviceLanguage = Application.systemLanguage;
-
-        // 지원하는 언어인지 확인
-        if (SupportedLanguages.Contains(deviceLanguage))
-            systemLanguage = deviceLanguage;
-        else
-            // 기본 언어로 영어 설정
+        catch
+        {
             systemLanguage = SystemLanguage.English;
-
-        // 설정 저장
-        PlayerPrefs.SetString("SystemLanguage", systemLanguage.ToString());
-        PlayerPrefs.Save();
+        }
     }
 
     private static void LoadGameLanguage()
     {
-        // PlayerPrefs에서 저장된 언어 설정 확인
-        if (PlayerPrefs.HasKey("GameLanguage"))
-        {
-            string savedLanguage = PlayerPrefs.GetString("GameLanguage");
-            if (Enum.TryParse(savedLanguage, out SystemLanguage language))
-            {
-                gameLanguage = language;
-                Debug.Log("게임 언어 불러옴" + gameLanguage.ToString());
-                return;
-            }
-        }
-
-        // 저장된 설정이 없으면 시스템 언어 감지
-        SystemLanguage deviceLanguage = SystemLanguage.English;
-
-        // 지원하는 언어인지 확인
-        if (SupportedLanguages.Contains(deviceLanguage))
-            gameLanguage = deviceLanguage;
-        else
-            // 기본 언어로 영어 설정
-            gameLanguage = SystemLanguage.English;
-
-        // 설정 저장
-        PlayerPrefs.SetString("GameLanguage", gameLanguage.ToString());
-        PlayerPrefs.Save();
-    }
-
-    // 언어 파일 로딩
-    private static void LoadLocalizedText(string filePath)
-    {
-        if (File.Exists(filePath))
-        {
-            string jsonText = File.ReadAllText(filePath);
-            ProcessJsonData(jsonText);
-        }
-        else
-        {
-            Debug.LogError($"Cannot find localization file at path: {filePath}");
-        }
-    }
-
-    // JSON 데이터 처리 - 스페인어, 프랑스어 추가
-    private static void ProcessJsonData(string jsonText)
-    {
         try
         {
-            // Newtonsoft.Json 사용하여 파싱
-            Dictionary<string, LocalizationEntry> jsonData =
-                JsonConvert.DeserializeObject<Dictionary<string, LocalizationEntry>>(jsonText);
-
-            if (jsonData == null)
+            if (PlayerPrefs.HasKey("GameLanguage"))
             {
-                Debug.LogError("Failed to parse JSON data");
-                return;
-            }
-
-            // JSON 데이터를 순회하며 로컬라이제이션 데이터 구축
-            foreach (KeyValuePair<string, LocalizationEntry> entry in jsonData)
-                if (!string.IsNullOrEmpty(entry.Value.key))
+                string savedLanguage = PlayerPrefs.GetString("GameLanguage");
+                if (Enum.TryParse(savedLanguage, out SystemLanguage language))
                 {
-                    Dictionary<string, string> translations = new();
-
-                    // 모든 지원 언어 처리
-                    if (!string.IsNullOrEmpty(entry.Value.ko))
-                        translations["ko"] = entry.Value.ko;
-
-                    if (!string.IsNullOrEmpty(entry.Value.eng))
-                        translations["eng"] = entry.Value.eng;
-
-                    if (!string.IsNullOrEmpty(entry.Value.es))
-                        translations["es"] = entry.Value.es;
-
-                    if (!string.IsNullOrEmpty(entry.Value.fr))
-                        translations["fr"] = entry.Value.fr;
-
-                    localizedTexts[entry.Value.key] = translations;
+                    gameLanguage = language;
+                    Debug.Log("게임 언어 불러옴: " + gameLanguage.ToString());
+                    return;
                 }
+            }
+
+            gameLanguage = SystemLanguage.English;
+            PlayerPrefs.SetString("GameLanguage", gameLanguage.ToString());
+            PlayerPrefs.Save();
         }
-        catch (Exception e)
+        catch
         {
-            Debug.LogError($"Error processing JSON data: {e.Message}");
+            gameLanguage = SystemLanguage.English;
         }
     }
 
-    // WebGL 플랫폼을 위한 비동기 로딩
-    private static IEnumerator LoadLocalizedTextWebGL(string filePath)
+    // 폴백 데이터
+    private static void LoadFallbackData()
     {
-        Debug.Log($"WebGL에서 언어 파일 로딩 시작: {filePath}");
+        Debug.LogWarning("폴백 데이터 사용");
 
-        UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Get(filePath);
-        yield return www.SendWebRequest();
+        localizedTexts.Clear();
 
-        // 초기화 중복 체크 (코루틴 실행 중에 다른 곳에서 초기화가 완료되었을 수 있음)
-        if (isInitialized)
+        try
         {
-            Debug.Log("WebGL 로딩 중 이미 다른 곳에서 초기화가 완료됨");
-            yield break;
-        }
-
-        if (www.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
-        {
-            string jsonText = www.downloadHandler.text;
-            Debug.Log("WebGL 언어 파일 로딩 성공, JSON 파싱 시작");
-
-            try
+            localizedTexts["ui.settings.confirm"] = new Dictionary<string, string>
             {
-                ProcessJsonData(jsonText);
-                Debug.Log("JSON 파싱 완료");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"JSON 파싱 중 오류: {e.Message}");
-            }
-        }
-        else
-        {
-            Debug.LogError($"Error loading localization file: {www.error}");
-        }
+                ["ko"] = "확인", ["eng"] = "Confirm", ["es"] = "Confirmar", ["fr"] = "Confirmer"
+            };
 
-        // WebGL에서 로딩 완료 후 초기화 완료 처리
-        CompleteInitialization();
+            localizedTexts["ui.settings.cancel"] = new Dictionary<string, string>
+            {
+                ["ko"] = "취소", ["eng"] = "Cancel", ["es"] = "Cancelar", ["fr"] = "Annuler"
+            };
+
+            Debug.Log($"폴백 데이터 로드 완료 - {localizedTexts.Count}개 키");
+        }
+        catch
+        {
+            // 최소한의 데이터
+            localizedTexts["ui.settings.confirm"] = new Dictionary<string, string> { ["eng"] = "Confirm" };
+        }
     }
 
-    // 언어 코드 얻기 - 스페인어, 프랑스어 추가
+    // 언어 코드 얻기
     private static string GetLanguageCode(SystemLanguage language)
     {
         switch (language)
         {
-            case SystemLanguage.English:
-                return "eng";
-            case SystemLanguage.Korean:
-                return "ko";
-            case SystemLanguage.Spanish:
-                return "es";
-            case SystemLanguage.French:
-                return "fr";
-            default:
-                return "eng"; // 기본값
+            case SystemLanguage.English: return "eng";
+            case SystemLanguage.Korean: return "ko";
+            case SystemLanguage.Spanish: return "es";
+            case SystemLanguage.French: return "fr";
+            default: return "eng";
         }
     }
 
-    // 키를 사용하여 현재 언어로 텍스트 얻기
+    // 텍스트 가져오기
     public static string GetLocalizedText(string key)
     {
         if (!isInitialized)
         {
-            Debug.LogWarning("LocalizationManager not initialized. Call Initialize() first.");
+            Debug.LogWarning("LocalizationManager not initialized.");
             return key;
         }
 
-        string languageCode = GetLanguageCode(systemLanguage);
-
-        // 키가 없는 경우 키 자체를 반환 (디버깅 용이)
-        if (!localizedTexts.ContainsKey(key) || !localizedTexts[key].ContainsKey(languageCode))
+        try
         {
-            Debug.LogWarning($"Localization key not found: {key} for language {languageCode}");
+            string languageCode = GetLanguageCode(systemLanguage);
+
+            if (localizedTexts.ContainsKey(key) && localizedTexts[key].ContainsKey(languageCode))
+                return localizedTexts[key][languageCode];
 
             // 영어로 폴백
-            if (languageCode != "eng" && localizedTexts.ContainsKey(key) &&
-                localizedTexts[key].ContainsKey("eng"))
+            if (languageCode != "eng" && localizedTexts.ContainsKey(key) && localizedTexts[key].ContainsKey("eng"))
                 return localizedTexts[key]["eng"];
 
+            Debug.LogWarning($"Localization key not found: {key}");
             return key;
         }
-
-        return localizedTexts[key][languageCode];
+        catch
+        {
+            return key;
+        }
     }
 
-    // 포맷팅을 지원하는 버전 (예: "Hello, {0}!" -> "Hello, Player!")
+    // 포맷팅 지원
     public static string GetLocalizedText(string key, params object[] args)
     {
         string value = GetLocalizedText(key);
@@ -317,70 +424,90 @@ public static class LocalizationManager
             {
                 return string.Format(value, args);
             }
-            catch (FormatException ex)
+            catch
             {
-                Debug.LogError($"Format error for key '{key}': {ex.Message}");
+                Debug.LogError($"Format error for key '{key}'");
                 return value;
             }
 
         return value;
     }
 
-    // 언어 변경 메서드
+    // 언어 변경 (안전한 버전)
     public static void ChangeSystemLanguage(SystemLanguage language)
     {
-        if (SupportedLanguages.Contains(language))
+        try
         {
-            CurrentSystemLanguage = language;
+            if (!SupportedLanguages.Contains(language))
+            {
+                Debug.LogWarning($"Language {language} is not supported");
+                return;
+            }
+
+            if (systemLanguage == language)
+            {
+                Debug.Log($"언어가 이미 {language}로 설정되어 있습니다.");
+                return;
+            }
+
+            systemLanguage = language;
             PlayerPrefs.SetString("SystemLanguage", language.ToString());
             PlayerPrefs.Save();
 
-            Debug.Log($"시스템 언어 변경됨: {language} (코드: {GetLanguageCode(language)})");
+            Debug.Log($"시스템 언어 변경됨: {language}");
+
+            try
+            {
+                OnLanguageChanged?.Invoke(systemLanguage);
+            }
+            catch
+            {
+                // 이벤트 에러 무시
+            }
         }
-        else
+        catch
         {
-            Debug.LogWarning($"Language {language} is not supported");
+            Debug.LogError("언어 변경 실패");
         }
     }
 
     public static void ChangeGameLanguage(SystemLanguage language)
     {
-        if (SupportedLanguages.Contains(language))
+        try
         {
+            if (!SupportedLanguages.Contains(language))
+            {
+                Debug.LogWarning($"Language {language} is not supported");
+                return;
+            }
+
+            if (gameLanguage == language)
+            {
+                Debug.Log($"게임 언어가 이미 {language}로 설정되어 있습니다.");
+                return;
+            }
+
             gameLanguage = language;
             PlayerPrefs.SetString("GameLanguage", language.ToString());
             PlayerPrefs.Save();
 
             Debug.Log($"게임 언어 변경됨: {language}");
         }
-        else
+        catch
         {
-            Debug.LogWarning($"Language {language} is not supported");
+            Debug.LogError("게임 언어 변경 실패");
         }
-    }
-
-    // 로컬라이제이션 데이터 구조 - 스페인어, 프랑스어 필드 추가
-    [Serializable]
-    private class LocalizationEntry
-    {
-        public string key;
-        public string ko;
-        public string eng;
-        public string es; // 스페인어 추가
-        public string fr; // 프랑스어 추가
     }
 }
 
 // 확장 메소드
 public static class LocalizationExtensions
 {
-    // string 확장 메소드: 직접 키를 문자열로 변환
     public static string Localize(this string key)
     {
         return LocalizationManager.GetLocalizedText(key);
     }
 
-    // string 확장 메소드: 매개변수를 포함하는 로컬라이제이션
     public static string Localize(this string key, params object[] args)
     {
         return LocalizationManager.GetLocalizedText(key, args);
