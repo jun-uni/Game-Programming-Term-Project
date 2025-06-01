@@ -38,5 +38,75 @@
     "key": "ui.credits.close",
     "ko": "닫기",
     "eng": "Close"
+  },
+  "8": {
+    "key": "ui.how.first",
+    "ko": "원할한 게임을 위해 Google Chrome\n브라우저에서 플레이해주시기 바랍니다.\n\n타 브라우저에서는 원활하게 조작되지\n않을 수도 있습니다.",
+    "eng": "For the best experience, please play using the Google Chrome browser.\\n\\nOther browsers may not work properly."
+  },
+  "9": {
+    "key": "ui.settings.volume",
+    "ko": "음량",
+    "eng": "Volume"
+  },
+  "10": {
+    "key": "ui.how.second.move",
+    "ko": "방향키로 이동",
+    "eng": "Use arrow keys to move"
+  },
+  "11": {
+    "key": "ui.how.second.dash",
+    "ko": "Shift로 대쉬",
+    "eng": "Press Shift to dash"
+  },
+  "12": {
+    "key": "ui.how.second.attack",
+    "ko": "TYPE로 공격",
+    "eng": "TYPE to attack"
+  },
+  "13": {
+    "key": "ui.main.how",
+    "ko": "조작법",
+    "eng": "How to Play"
+  },
+  "14": {
+    "key": "ui.gameover.title",
+    "ko": "게임 오버",
+    "eng": "Game Over"
+  },
+  "15": {
+    "key": "ui.gameover.score",
+    "ko": "점수 : {0}",
+    "eng": "Score : {0}"
+  },
+  "16": {
+    "key": "ui.gameover.highscore",
+    "ko": "최고 점수 : {0}",
+    "eng": "High Score : {0}"
+  },
+  "17": {
+    "key": "ui.victory.title",
+    "ko": "승리!",
+    "eng": "Victory!"
+  },
+  "18": {
+    "key": "ui.victory.title",
+    "ko": "승리!",
+    "eng": "Victory!"
+  },
+  "19": {
+    "key": "ui.victory.score",
+    "ko": "점수 : {0}",
+    "eng": "Score : {0}"
+  },
+  "20": {
+    "key": "ui.victory.highscore",
+    "ko": "최고 점수 : {0}",
+    "eng": "High Score : {0}"
+  },
+  "21": {
+    "key": "ui.victory.typo",
+    "ko": "오타 개수 : {0}",
+    "eng": "Typos Count : {0}"
   }
 }

@@ -83,11 +83,30 @@ public class GameManager : MonoBehaviour
         enemiesKilled = 0;
         globalTypoCount = 0;
 
+        // 시간 스케일 정상화
+        Time.timeScale = 1.0f;
+
         Debug.Log("게임 시작!");
 
-        // UI 업데이트
+        // UI 즉시 업데이트 (게임 시작 시 초기값으로)
         OnGameTimeUpdated?.Invoke(GetRemainingTime());
         OnScoreUpdated?.Invoke(currentScore);
+
+        // 약간의 딜레이 후 다시 한번 UI 업데이트 (확실하게)
+        StartCoroutine(DelayedUIUpdate());
+    }
+
+    /// <summary>
+    /// 딜레이 후 UI 업데이트 (게임 시작 시 확실한 초기화)
+    /// </summary>
+    private IEnumerator DelayedUIUpdate()
+    {
+        yield return new WaitForSeconds(0.1f);
+
+        OnGameTimeUpdated?.Invoke(GetRemainingTime());
+        OnScoreUpdated?.Invoke(currentScore);
+
+        Debug.Log($"딜레이된 UI 업데이트 - 점수: {currentScore}, 시간: {GetRemainingTime()}");
     }
 
     public IEnumerator StopGameAfterDelay(float seconds)
@@ -99,6 +118,7 @@ public class GameManager : MonoBehaviour
 
     public void StopGame()
     {
+        isGameActive = false;
         Time.timeScale = 0.0f;
     }
 
@@ -193,6 +213,14 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 최종 점수 반환 (오타 페널티 적용)
+    /// </summary>
+    public int GetFinalScore()
+    {
+        return CalculateFinalScore();
+    }
+
+    /// <summary>
     /// 현재 통계 반환
     /// </summary>
     public (int score, int kills, int typos) GetCurrentStats()
@@ -268,9 +296,33 @@ public class GameManager : MonoBehaviour
         enemiesKilled = 0;
         globalTypoCount = 0;
 
+        // 시간 스케일 복구
+        Time.timeScale = 1.0f;
+
         Debug.Log("게임 상태 리셋 완료");
 
-        // UI 업데이트
+        // UI 업데이트 (즉시 실행)
+        OnGameTimeUpdated?.Invoke(GetRemainingTime());
+        OnScoreUpdated?.Invoke(currentScore);
+    }
+
+    /// <summary>
+    /// 홈으로 돌아갈 때 호출 (완전 초기화)
+    /// </summary>
+    public void ResetToHome()
+    {
+        isGameActive = false;
+        currentGameTime = 0f;
+        currentScore = 0;
+        enemiesKilled = 0;
+        globalTypoCount = 0;
+
+        // 시간 스케일 복구
+        Time.timeScale = 1.0f;
+
+        Debug.Log("홈으로 돌아가기 - 게임 상태 완전 초기화");
+
+        // UI 즉시 업데이트 (홈에서는 UI가 안 보이지만 상태는 초기화)
         OnGameTimeUpdated?.Invoke(GetRemainingTime());
         OnScoreUpdated?.Invoke(currentScore);
     }
@@ -324,11 +376,13 @@ public class GameManager : MonoBehaviour
     private void OnEnable()
     {
         SceneManager.sceneLoaded += PlayBGMForScene;
+        SceneManager.sceneLoaded += OnSceneLoadedForEvents; // 이벤트 재구독용
     }
 
     private void OnDisable()
     {
         SceneManager.sceneLoaded -= PlayBGMForScene;
+        SceneManager.sceneLoaded -= OnSceneLoadedForEvents; // 이벤트 재구독용
     }
 
     [Header("Audio Mixer")] [SerializeField]
@@ -409,6 +463,51 @@ public class GameManager : MonoBehaviour
             bgmSource.clip = clipToPlay;
             bgmSource.loop = true;
             bgmSource.Play();
+        }
+    }
+
+    /// <summary>
+    /// 씬 로드 시 이벤트 재구독 처리
+    /// </summary>
+    private void OnSceneLoadedForEvents(Scene scene, LoadSceneMode mode)
+    {
+        // 플레이어 이벤트 재구독을 위한 코루틴 시작 (플레이어 생성 대기)
+        StartCoroutine(ResubscribePlayerEvents());
+    }
+
+    /// <summary>
+    /// 플레이어 이벤트 재구독 코루틴
+    /// </summary>
+    private IEnumerator ResubscribePlayerEvents()
+    {
+        // 플레이어가 생성될 때까지 대기
+        PlayerController player = null;
+        float waitTime = 0f;
+        const float maxWaitTime = 5f; // 최대 5초 대기
+
+        while (player == null && waitTime < maxWaitTime)
+        {
+            player = FindObjectOfType<PlayerController>();
+            if (player == null)
+            {
+                yield return new WaitForSeconds(0.1f);
+                waitTime += 0.1f;
+            }
+        }
+
+        if (player != null)
+        {
+            // 기존 이벤트 구독 해제 (중복 방지)
+            PlayerController.OnPlayerDeath -= HandlePlayerDeath;
+
+            // 새로운 이벤트 구독
+            PlayerController.OnPlayerDeath += HandlePlayerDeath;
+
+            Debug.Log("플레이어 이벤트 재구독 완료");
+        }
+        else
+        {
+            Debug.LogWarning("플레이어를 찾을 수 없어 이벤트 구독 실패");
         }
     }
 

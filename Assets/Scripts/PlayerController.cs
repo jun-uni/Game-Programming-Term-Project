@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
+using Random = UnityEngine.Random;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
@@ -65,9 +67,11 @@ public class PlayerController : MonoBehaviour
     private static readonly int DeathTrigger = Animator.StringToHash("Death");
     private static readonly int IsAliveBool = Animator.StringToHash("IsAlive");
 
-    private float maxHitPoint = 100;
+    // 체력 시스템을 int로 변경 (3칸 시스템)
+    private int maxHitPoint = 3;
     private bool isDead = false;
-    public static System.Action OnPlayerDeath;
+    public static event Action OnPlayerDeath;
+    public static event Action<int, int> OnPlayerHealthChanged; // (currentHealth, maxHealth)
 
     [Header("Death Sound Settings")] [SerializeField]
     private AudioClip deathSoundClip;
@@ -81,7 +85,7 @@ public class PlayerController : MonoBehaviour
 
     private Renderer[] renderers; // 깜빡임 효과를 위한 렌더러들
 
-    private float currentHitPoint = 100;
+    private int currentHitPoint = 3; // int로 변경
     private bool isInvincible = false; // 무적 상태
     private bool isCasting = false; // 전투 중인지
     private Transform currentCastTarget; // 현재 공격 중인 타겟
@@ -117,6 +121,9 @@ public class PlayerController : MonoBehaviour
 
         // 단어 완성 이벤트 구독
         WordCompletionEvents.OnWordCompleted += HandleWordCompleted;
+
+        // 초기 체력 UI 업데이트
+        OnPlayerHealthChanged?.Invoke(currentHitPoint, maxHitPoint);
     }
 
     private void OnDestroy()
@@ -147,9 +154,12 @@ public class PlayerController : MonoBehaviour
 
             if (enemy != null)
                 // 실제 공격 판정이 활성화되어 있을 때만 피격 처리
-                if (enemy.isAttackActive && currentHitPoint > 0.0f)
+                if (enemy.isAttackActive && currentHitPoint > 0)
                 {
-                    currentHitPoint -= 10.0f;
+                    currentHitPoint -= 1; // 1씩 감소
+
+                    // 체력 UI 업데이트
+                    OnPlayerHealthChanged?.Invoke(currentHitPoint, maxHitPoint);
 
                     // 체력이 0 이하가 되면 죽음 처리
                     if (currentHitPoint <= 0)
@@ -727,6 +737,9 @@ public class PlayerController : MonoBehaviour
         animator.SetBool(IsAliveBool, false);
         animator.SetTrigger(DeathTrigger);
 
+        // 체력 UI 업데이트 (0으로)
+        OnPlayerHealthChanged?.Invoke(currentHitPoint, maxHitPoint);
+
         // 부활 처리 시작
         if (autoRespawn) StartCoroutine(RespawnCoroutine());
 
@@ -799,6 +812,9 @@ public class PlayerController : MonoBehaviour
         // 렌더러 활성화
         SetRenderersEnabled(true);
 
+        // 체력 UI 업데이트
+        OnPlayerHealthChanged?.Invoke(currentHitPoint, maxHitPoint);
+
         // 잠시 무적 시간 부여 (부활 직후 보호)
         StartCoroutine(RespawnInvincibility());
     }
@@ -869,7 +885,7 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// 현재 체력 반환
     /// </summary>
-    public float GetCurrentHitPoint()
+    public int GetCurrentHitPoint()
     {
         return currentHitPoint;
     }
@@ -877,9 +893,10 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// 체력 설정 (외부에서 호출 가능)
     /// </summary>
-    public void SetHitPoint(float newHitPoint)
+    public void SetHitPoint(int newHitPoint)
     {
         currentHitPoint = Mathf.Max(0, newHitPoint);
+        OnPlayerHealthChanged?.Invoke(currentHitPoint, maxHitPoint);
     }
 
     #endregion
