@@ -25,9 +25,12 @@ public class UIManager : MonoBehaviour
 
     [Header("실시간 점수")] [SerializeField] private TextMeshProUGUI currentScoreText;
 
-    [Header("체력&스태미너")] [SerializeField] private Image firstHealthImage;
+    [Header("체력")] [SerializeField] private Image firstHealthImage;
     [SerializeField] private Image secondHealthImage;
     [SerializeField] private Image thirdHealthImage;
+
+    [Header("스태미너")] [SerializeField] private Image staminaBarBackground; // 스태미너 바 배경
+    [SerializeField] private Image staminaBarFill; // 스태미너 바 Fill
 
     [Header("게임 UI 컨테이너")] [SerializeField]
     private GameObject gameUIContainer; // 게임 중에만 보일 UI들을 담을 컨테이너
@@ -60,6 +63,9 @@ public class UIManager : MonoBehaviour
         // 플레이어 체력 이벤트 구독
         PlayerController.OnPlayerHealthChanged += UpdateHealthUI;
 
+        // 플레이어 스태미너 이벤트 구독
+        PlayerController.OnPlayerStaminaChanged += UpdateStaminaUI;
+
         // 씬 변경 이벤트 구독
         SceneManager.sceneLoaded += OnSceneLoaded;
 
@@ -77,6 +83,9 @@ public class UIManager : MonoBehaviour
 
         // 플레이어 체력 이벤트 구독 해제
         PlayerController.OnPlayerHealthChanged -= UpdateHealthUI;
+
+        // 플레이어 스태미너 이벤트 구독 해제
+        PlayerController.OnPlayerStaminaChanged -= UpdateStaminaUI;
 
         // 씬 변경 이벤트 구독 해제
         SceneManager.sceneLoaded -= OnSceneLoaded;
@@ -215,13 +224,19 @@ public class UIManager : MonoBehaviour
             timerText.text = $"{minutes:00}:{seconds:00}";
         }
 
-        // 플레이어가 존재하면 체력 UI 업데이트
+        // 플레이어가 존재하면 체력 & 스태미너 UI 업데이트
         PlayerController player = FindObjectOfType<PlayerController>();
         if (player != null)
+        {
             UpdateHealthUI(player.GetCurrentHitPoint(), 3); // maxHealth는 3으로 고정
+            UpdateStaminaUI(player.GetCurrentStamina(), player.GetMaxStamina());
+        }
         else
-            // 플레이어가 없으면 기본값으로 체력 UI 설정
+        {
+            // 플레이어가 없으면 기본값으로 UI 설정
             UpdateHealthUI(3, 3);
+            UpdateStaminaUI(100f, 100f);
+        }
     }
 
     /// <summary>
@@ -244,6 +259,12 @@ public class UIManager : MonoBehaviour
             secondHealthImage.gameObject.SetActive(active);
         if (thirdHealthImage != null)
             thirdHealthImage.gameObject.SetActive(active);
+
+        // 스태미너 UI
+        if (staminaBarBackground != null)
+            staminaBarBackground.gameObject.SetActive(active);
+        if (staminaBarFill != null)
+            staminaBarFill.gameObject.SetActive(active);
     }
 
     #endregion
@@ -346,6 +367,27 @@ public class UIManager : MonoBehaviour
                 healthImages[i].enabled = i < currentHealth;
 
         Debug.Log($"체력 UI 업데이트: {currentHealth}/{maxHealth}");
+    }
+
+    /// <summary>
+    /// 플레이어 스태미너 UI 업데이트
+    /// </summary>
+    /// <param name="currentStamina">현재 스태미너</param>
+    /// <param name="maxStamina">최대 스태미너</param>
+    public void UpdateStaminaUI(float currentStamina, float maxStamina)
+    {
+        // 게임 씬이 아니면 스태미너 UI 업데이트 건너뛰기
+        if (!IsGameScene() || staminaBarFill == null)
+            return;
+
+        // 스태미너 비율 계산 (0~1)
+        float staminaRatio = maxStamina > 0 ? currentStamina / maxStamina : 0f;
+        staminaRatio = Mathf.Clamp01(staminaRatio);
+
+        // Fill Amount 설정
+        staminaBarFill.fillAmount = staminaRatio;
+
+        Debug.Log($"스태미너 UI 업데이트: {currentStamina:F1}/{maxStamina} ({staminaRatio:P1})");
     }
 
     #endregion

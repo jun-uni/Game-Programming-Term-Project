@@ -122,6 +122,17 @@ public class TypingManager : MonoBehaviour
         if (individualTypoTargets.Count == 0)
             return false;
 
+        // 진행도가 2 이상인 개별 오타만 고려 (첫 글자 오타는 단순 선택 문제)
+        List<KeyValuePair<WordTarget, int>> significantTypoTargets =
+            individualTypoTargets.Where(kvp => kvp.Value >= 2).ToList();
+
+        if (significantTypoTargets.Count == 0)
+        {
+            if (showDebugInfo)
+                Debug.Log("전역 오타 회피: 첫 글자 선택 오타만 발생함");
+            return false; // 첫 글자 오타만 있다면 전역 오타 아님
+        }
+
         // 6번 규칙: 개별 오타가 발생한 타겟들의 이전 진행도 중 최대값
         int maxTypoProgress = individualTypoTargets.Values.Max();
 

@@ -16,6 +16,8 @@ public class SettingsPanelController : MonoBehaviour
     [SerializeField] private Button cancelButton;
     [SerializeField] private Button systemLanguageEnglishButton;
     [SerializeField] private Button systemLanguageKoreanButton;
+    [SerializeField] private Button systemLanguageSpanishButton;
+    [SerializeField] private Button systemLanguageFrenchButton;
     [SerializeField] private Button gameLanguageEnglishButton;
     [SerializeField] private Button gameLanguageKoreanButton;
 
@@ -136,17 +138,10 @@ public class SettingsPanelController : MonoBehaviour
 
     public void InitializeLanguageButtons()
     {
-        if (currentSystemLanguage == SystemLanguage.English)
-        {
-            systemLanguageEnglishButton.image.color = selectedButtonColor;
-            systemLanguageKoreanButton.image.color = normalButtonColor;
-        }
-        else
-        {
-            systemLanguageEnglishButton.image.color = normalButtonColor;
-            systemLanguageKoreanButton.image.color = selectedButtonColor;
-        }
+        // 시스템 언어 버튼 색상 설정
+        UpdateSystemLanguageButtonColors(currentSystemLanguage);
 
+        // 게임 언어 버튼 색상 설정 (기존 방식 유지)
         if (currentGameLanguage == SystemLanguage.English)
         {
             gameLanguageEnglishButton.image.color = selectedButtonColor;
@@ -159,20 +154,73 @@ public class SettingsPanelController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 시스템 언어 버튼들의 색상을 업데이트하는 공통 함수
+    /// </summary>
+    /// <param name="selectedLanguage">선택된 언어</param>
+    private void UpdateSystemLanguageButtonColors(SystemLanguage selectedLanguage)
+    {
+        // 모든 시스템 언어 버튼을 기본 색상으로 초기화
+        systemLanguageEnglishButton.image.color = normalButtonColor;
+        systemLanguageKoreanButton.image.color = normalButtonColor;
+        systemLanguageSpanishButton.image.color = normalButtonColor;
+        systemLanguageFrenchButton.image.color = normalButtonColor;
+
+        // 선택된 언어 버튼만 활성화 색상으로 설정
+        switch (selectedLanguage)
+        {
+            case SystemLanguage.English:
+                systemLanguageEnglishButton.image.color = selectedButtonColor;
+                break;
+            case SystemLanguage.Korean:
+                systemLanguageKoreanButton.image.color = selectedButtonColor;
+                break;
+            case SystemLanguage.Spanish:
+                systemLanguageSpanishButton.image.color = selectedButtonColor;
+                break;
+            case SystemLanguage.French:
+                systemLanguageFrenchButton.image.color = selectedButtonColor;
+                break;
+            default:
+                // 지원하지 않는 언어의 경우 영어를 기본으로 설정
+                systemLanguageEnglishButton.image.color = selectedButtonColor;
+                break;
+        }
+    }
+
     public void OnClickSystemLanguageKoreanButton()
     {
         currentSystemLanguage = SystemLanguage.Korean;
         LocalizationManager.ChangeSystemLanguage(SystemLanguage.Korean);
-        systemLanguageEnglishButton.image.color = normalButtonColor;
-        systemLanguageKoreanButton.image.color = selectedButtonColor;
+        UpdateSystemLanguageButtonColors(SystemLanguage.Korean);
     }
 
     public void OnClickSystemLanguageEnglishButton()
     {
         currentSystemLanguage = SystemLanguage.English;
         LocalizationManager.ChangeSystemLanguage(SystemLanguage.English);
-        systemLanguageEnglishButton.image.color = selectedButtonColor;
-        systemLanguageKoreanButton.image.color = normalButtonColor;
+        UpdateSystemLanguageButtonColors(SystemLanguage.English);
+    }
+
+    public void OnClickSystemLanguageJapaneseButton()
+    {
+        currentSystemLanguage = SystemLanguage.Japanese;
+        LocalizationManager.ChangeSystemLanguage(SystemLanguage.Japanese);
+        UpdateSystemLanguageButtonColors(SystemLanguage.Japanese);
+    }
+
+    public void OnClickSystemLanguageSpanishButton()
+    {
+        currentSystemLanguage = SystemLanguage.Spanish;
+        LocalizationManager.ChangeSystemLanguage(SystemLanguage.Spanish);
+        UpdateSystemLanguageButtonColors(SystemLanguage.Spanish);
+    }
+
+    public void OnClickSystemLanguageFrenchButton()
+    {
+        currentSystemLanguage = SystemLanguage.French;
+        LocalizationManager.ChangeSystemLanguage(SystemLanguage.French);
+        UpdateSystemLanguageButtonColors(SystemLanguage.French);
     }
 
     public void OnClickGameLanguageKoreanButton()
@@ -236,6 +284,20 @@ public class SettingsPanelController : MonoBehaviour
             LocalizationManager.ChangeGameLanguage(originalGameLanguage);
         }
 
+        // 언어 버튼 색상도 원래대로 복원
+        UpdateSystemLanguageButtonColors(originalSystemLanguage);
+
+        // 게임 언어 버튼도 복원
+        if (originalGameLanguage == SystemLanguage.English)
+        {
+            gameLanguageEnglishButton.image.color = selectedButtonColor;
+            gameLanguageKoreanButton.image.color = normalButtonColor;
+        }
+        else
+        {
+            gameLanguageEnglishButton.image.color = normalButtonColor;
+            gameLanguageKoreanButton.image.color = selectedButtonColor;
+        }
 
         // 설정창 닫기
         CloseSettingsPanel();

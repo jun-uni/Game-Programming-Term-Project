@@ -46,10 +46,10 @@ public static class LocalizationManager
 
     public static bool IsInitialized => isInitialized;
 
-    // 지원하는 언어 목록
+    // 지원하는 언어 목록 (일본어 제외)
     public static List<SystemLanguage> SupportedLanguages { get; } = new()
     {
-        SystemLanguage.English, SystemLanguage.Korean
+        SystemLanguage.English, SystemLanguage.Korean, SystemLanguage.Spanish, SystemLanguage.French
     };
 
     // 매니저 초기화 (게임 매니저 Start에서 호출)
@@ -180,7 +180,7 @@ public static class LocalizationManager
         }
     }
 
-    // JSON 데이터 처리
+    // JSON 데이터 처리 - 스페인어, 프랑스어 추가
     private static void ProcessJsonData(string jsonText)
     {
         try
@@ -201,12 +201,18 @@ public static class LocalizationManager
                 {
                     Dictionary<string, string> translations = new();
 
-                    // "ko", "eng" 등의 언어 코드 추출
+                    // 모든 지원 언어 처리
                     if (!string.IsNullOrEmpty(entry.Value.ko))
                         translations["ko"] = entry.Value.ko;
 
                     if (!string.IsNullOrEmpty(entry.Value.eng))
                         translations["eng"] = entry.Value.eng;
+
+                    if (!string.IsNullOrEmpty(entry.Value.es))
+                        translations["es"] = entry.Value.es;
+
+                    if (!string.IsNullOrEmpty(entry.Value.fr))
+                        translations["fr"] = entry.Value.fr;
 
                     localizedTexts[entry.Value.key] = translations;
                 }
@@ -256,15 +262,19 @@ public static class LocalizationManager
         CompleteInitialization();
     }
 
-    // 언어 코드 얻기
+    // 언어 코드 얻기 - 스페인어, 프랑스어 추가
     private static string GetLanguageCode(SystemLanguage language)
     {
         switch (language)
         {
             case SystemLanguage.English:
-                return "eng"; // JSON에서 사용된 키가 "eng"
+                return "eng";
             case SystemLanguage.Korean:
                 return "ko";
+            case SystemLanguage.Spanish:
+                return "es";
+            case SystemLanguage.French:
+                return "fr";
             default:
                 return "eng"; // 기본값
         }
@@ -324,6 +334,8 @@ public static class LocalizationManager
             CurrentSystemLanguage = language;
             PlayerPrefs.SetString("SystemLanguage", language.ToString());
             PlayerPrefs.Save();
+
+            Debug.Log($"시스템 언어 변경됨: {language} (코드: {GetLanguageCode(language)})");
         }
         else
         {
@@ -338,6 +350,8 @@ public static class LocalizationManager
             gameLanguage = language;
             PlayerPrefs.SetString("GameLanguage", language.ToString());
             PlayerPrefs.Save();
+
+            Debug.Log($"게임 언어 변경됨: {language}");
         }
         else
         {
@@ -345,13 +359,15 @@ public static class LocalizationManager
         }
     }
 
-    // 로컬라이제이션 데이터 구조
+    // 로컬라이제이션 데이터 구조 - 스페인어, 프랑스어 필드 추가
     [Serializable]
     private class LocalizationEntry
     {
         public string key;
         public string ko;
         public string eng;
+        public string es; // 스페인어 추가
+        public string fr; // 프랑스어 추가
     }
 }
 

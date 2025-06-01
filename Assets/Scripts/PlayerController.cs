@@ -13,6 +13,17 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")] public float moveSpeed = 4f; // 걷기 속도
     public float runSpeed = 8f; // 뛰기 속도
 
+    [Header("Stamina Settings")] [SerializeField]
+    private float maxStamina = 100f; // 최대 스태미너
+
+    [SerializeField] private float currentStamina = 100f; // 현재 스태미너
+    [SerializeField] private float staminaDrainRate = 20f; // 초당 스태미너 소모량 (달릴 때)
+    [SerializeField] private float staminaRecoveryAmount = 25f; // 단어 완성시 회복량
+    [SerializeField] private float minStaminaToRun = 5f; // 달리기 위한 최소 스태미너
+
+    // 스태미너 관련 이벤트
+    public static event Action<float, float> OnPlayerStaminaChanged; // (currentStamina, maxStamina)
+
     [Header("Animation Smooth Settings")] [Range(0.1f, 10f)]
     public float moveBlendSpeed = 8f; // 이동 블렌딩 속도
 
@@ -101,6 +112,9 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
+        // 스태미너 초기화
+        currentStamina = maxStamina;
+
         // 모든 렌더러 컴포넌트 가져오기 (깜빡임 효과용)
         renderers = GetComponentsInChildren<Renderer>();
 
@@ -124,6 +138,9 @@ public class PlayerController : MonoBehaviour
 
         // 초기 체력 UI 업데이트
         OnPlayerHealthChanged?.Invoke(currentHitPoint, maxHitPoint);
+
+        // 초기 스태미너 UI 업데이트
+        OnPlayerStaminaChanged?.Invoke(currentStamina, maxStamina);
     }
 
     private void OnDestroy()
@@ -203,8 +220,21 @@ public class PlayerController : MonoBehaviour
         // 입력이 있는지 확인
         if (currentInput.magnitude > 0.1f)
         {
-            // 달리기 여부 확인
-            bool isRun = Input.GetKey(KeyCode.LeftShift);
+            // 달리기 여부 확인 (스태미너 체크 포함)
+            bool wantsToRun = Input.GetKey(KeyCode.LeftShift);
+            bool canRun = currentStamina >= minStaminaToRun;
+            bool isRun = wantsToRun && canRun;
+
+            // 스태미너 소모 처리
+            if (isRun)
+            {
+                currentStamina -= staminaDrainRate * Time.deltaTime;
+                currentStamina = Mathf.Max(0f, currentStamina);
+
+                // 스태미너 UI 업데이트
+                OnPlayerStaminaChanged?.Invoke(currentStamina, maxStamina);
+            }
+
             float speed = isRun ? runSpeed : moveSpeed;
 
             // 완전 월드축 기준 이동 방향 (Z = 앞/뒤, X = 좌/우)
@@ -247,14 +277,61 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
+    #region Stamina System
+
+    /// <summary>
+    /// 스태미너 회복 (단어 완성 시 호출)
+    /// </summary>
+    public void RecoverStamina()
+    {
+        currentStamina += staminaRecoveryAmount;
+        currentStamina = Mathf.Min(currentStamina, maxStamina);
+
+        // 스태미너 UI 업데이트
+        OnPlayerStaminaChanged?.Invoke(currentStamina, maxStamina);
+
+        if (showDebugInfo)
+            Debug.Log($"스태미너 회복! 현재: {currentStamina:F1}/{maxStamina}");
+    }
+
+    /// <summary>
+    /// 현재 스태미너 반환
+    /// </summary>
+    public float GetCurrentStamina()
+    {
+        return currentStamina;
+    }
+
+    /// <summary>
+    /// 최대 스태미너 반환
+    /// </summary>
+    public float GetMaxStamina()
+    {
+        return maxStamina;
+    }
+
+    /// <summary>
+    /// 스태미너 설정 (외부에서 호출 가능)
+    /// </summary>
+    public void SetStamina(float newStamina)
+    {
+        currentStamina = Mathf.Clamp(newStamina, 0f, maxStamina);
+        OnPlayerStaminaChanged?.Invoke(currentStamina, maxStamina);
+    }
+
+    #endregion
+
     #region Combat System
 
     /// <summary>
-    /// 단어 완성 이벤트 핸들러 - 큐 시스템 적용
+    /// 단어 완성 이벤트 핸들러 - 큐 시스템 적용 + 스태미너 회복
     /// </summary>
     private void HandleWordCompleted(Transform target)
     {
         if (target == null) return;
+
+        // 단어 완성 시 스태미너 회복
+        RecoverStamina();
 
         Vector3 originalPosition = target.position; // 원래 위치 저장
 
@@ -802,6 +879,9 @@ public class PlayerController : MonoBehaviour
         currentHitPoint = maxHitPoint;
         isInvincible = false;
 
+        // 스태미너 완전 회복
+        currentStamina = maxStamina;
+
         // 위치 초기화
         transform.position = respawnPosition;
         transform.rotation = Quaternion.identity;
@@ -814,6 +894,9 @@ public class PlayerController : MonoBehaviour
 
         // 체력 UI 업데이트
         OnPlayerHealthChanged?.Invoke(currentHitPoint, maxHitPoint);
+
+        // 스태미너 UI 업데이트
+        OnPlayerStaminaChanged?.Invoke(currentStamina, maxStamina);
 
         // 잠시 무적 시간 부여 (부활 직후 보호)
         StartCoroutine(RespawnInvincibility());

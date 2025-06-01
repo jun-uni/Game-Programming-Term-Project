@@ -2,111 +2,208 @@
   "0": {
     "key": "ui.settings.systemlanguage",
     "ko": "시스템 언어 :",
-    "eng": "System Language :"
+    "eng": "System Language :",
+    "jp": "システム言語：",
+    "zh": "系统语言：",
+    "es": "Idioma del sistema:",
+    "fr": "Langue du système :"
   },
   "1": {
     "key": "ui.settings.gamelanguage",
     "ko": "게임 언어 :",
-    "eng": "Game Language :"
+    "eng": "Game Language :",
+    "jp": "ゲーム言語：",
+    "zh": "游戏语言：",
+    "es": "Idioma del juego:",
+    "fr": "Langue du jeu :"
   },
   "2": {
     "key": "ui.settings.confirm",
     "ko": "확인",
-    "eng": "Confirm"
+    "eng": "Confirm",
+    "jp": "確認",
+    "zh": "确认",
+    "es": "Confirmar",
+    "fr": "Confirmer"
   },
   "3": {
     "key": "ui.settings.cancel",
     "ko": "취소",
-    "eng": "Cancel"
+    "eng": "Cancel",
+    "jp": "キャンセル",
+    "zh": "取消",
+    "es": "Cancelar",
+    "fr": "Annuler"
   },
   "4": {
     "key": "ui.main.start",
     "ko": "게임 시작",
-    "eng": "Game Start"
+    "eng": "Game Start",
+    "jp": "ゲーム開始",
+    "zh": "开始游戏",
+    "es": "Iniciar juego",
+    "fr": "Démarrer le jeu"
   },
   "5": {
     "key": "ui.main.settings",
     "ko": "환경 설정",
-    "eng": "Settings"
+    "eng": "Settings",
+    "jp": "設定",
+    "zh": "设置",
+    "es": "Configuración",
+    "fr": "Paramètres"
   },
   "6": {
     "key": "ui.main.credits",
     "ko": "크레딧",
-    "eng": "Credits"
+    "eng": "Credits",
+    "jp": "クレジット",
+    "zh": "制作人员",
+    "es": "Créditos",
+    "fr": "Crédits"
   },
   "7": {
     "key": "ui.credits.close",
     "ko": "닫기",
-    "eng": "Close"
+    "eng": "Close",
+    "jp": "閉じる",
+    "zh": "关闭",
+    "es": "Cerrar",
+    "fr": "Fermer"
   },
   "8": {
     "key": "ui.how.first",
     "ko": "원할한 게임을 위해 Google Chrome\n브라우저에서 플레이해주시기 바랍니다.\n\n타 브라우저에서는 원활하게 조작되지\n않을 수도 있습니다.",
-    "eng": "For the best experience, please play using the Google Chrome browser.\\n\\nOther browsers may not work properly."
+    "eng": "For the best experience, please play using the Google Chrome browser.\\n\\nOther browsers may not work properly.",
+    "jp": "快適にプレイするために、Google Chromeブラウザでのプレイを推奨します。\n\n他のブラウザでは正しく動作しない場合があります。",
+    "zh": "为了更好的游戏体验，建议使用 Google Chrome 浏览器。\n\n其他浏览器可能无法正常运行。",
+    "es": "Para una mejor experiencia, se recomienda jugar en el navegador Google Chrome.\n\nOtros navegadores pueden no funcionar correctamente.",
+    "fr": "Pour une meilleure expérience, veuillez jouer avec le navigateur Google Chrome.\n\nD'autres navigateurs peuvent ne pas fonctionner correctement."
   },
   "9": {
     "key": "ui.settings.volume",
-    "ko": "음량",
-    "eng": "Volume"
+    "ko": "음량 :",
+    "eng": "Volume :",
+    "jp": "音量 :",
+    "zh": "音量 :",
+    "es": "Volumen :",
+    "fr": "Volume :"
   },
   "10": {
     "key": "ui.how.second.move",
     "ko": "방향키로 이동",
-    "eng": "Use arrow keys to move"
+    "eng": "Use arrow keys to move",
+    "jp": "矢印キーで移動",
+    "zh": "使用方向键移动",
+    "es": "Mover con las flechas",
+    "fr": "Se déplacer avec les flèches"
   },
   "11": {
     "key": "ui.how.second.dash",
     "ko": "Shift로 대쉬",
-    "eng": "Press Shift to dash"
+    "eng": "Press Shift to dash",
+    "jp": "Shiftキーでダッシュ",
+    "zh": "按 Shift 键冲刺",
+    "es": "Presiona Shift para correr",
+    "fr": "Appuyez sur Shift pour sprinter"
   },
   "12": {
     "key": "ui.how.second.attack",
     "ko": "TYPE로 공격",
-    "eng": "TYPE to attack"
+    "eng": "TYPE to attack",
+    "jp": "文字を入力して攻撃",
+    "zh": "输入文字进行攻击",
+    "es": "Escribe para atacar",
+    "fr": "Tapez pour attaquer"
   },
   "13": {
     "key": "ui.main.how",
     "ko": "조작법",
-    "eng": "How to Play"
+    "eng": "How to Play",
+    "jp": "操作方法",
+    "zh": "操作方法",
+    "es": "Cómo jugar",
+    "fr": "Comment jouer"
   },
   "14": {
     "key": "ui.gameover.title",
     "ko": "게임 오버",
-    "eng": "Game Over"
+    "eng": "Game Over",
+    "jp": "ゲームオーバー",
+    "zh": "游戏结束",
+    "es": "Juego terminado",
+    "fr": "Jeu terminé"
   },
   "15": {
     "key": "ui.gameover.score",
     "ko": "점수 : {0}",
-    "eng": "Score : {0}"
+    "eng": "Score : {0}",
+    "jp": "スコア：{0}",
+    "zh": "得分：{0}",
+    "es": "Puntuación: {0}",
+    "fr": "Score : {0}"
   },
   "16": {
     "key": "ui.gameover.highscore",
     "ko": "최고 점수 : {0}",
-    "eng": "High Score : {0}"
+    "eng": "High Score : {0}",
+    "jp": "ハイスコア：{0}",
+    "zh": "最高分：{0}",
+    "es": "Puntuación más alta: {0}",
+    "fr": "Meilleur score : {0}"
   },
   "17": {
     "key": "ui.victory.title",
     "ko": "승리!",
-    "eng": "Victory!"
+    "eng": "Victory!",
+    "jp": "勝利！",
+    "zh": "胜利！",
+    "es": "¡Victoria!",
+    "fr": "Victoire !"
   },
   "18": {
     "key": "ui.victory.title",
     "ko": "승리!",
-    "eng": "Victory!"
+    "eng": "Victory!",
+    "jp": "勝利！",
+    "zh": "胜利！",
+    "es": "¡Victoria!",
+    "fr": "Victoire !"
   },
   "19": {
     "key": "ui.victory.score",
     "ko": "점수 : {0}",
-    "eng": "Score : {0}"
+    "eng": "Score : {0}",
+    "jp": "スコア：{0}",
+    "zh": "得分：{0}",
+    "es": "Puntuación: {0}",
+    "fr": "Score : {0}"
   },
   "20": {
     "key": "ui.victory.highscore",
     "ko": "최고 점수 : {0}",
-    "eng": "High Score : {0}"
+    "eng": "High Score : {0}",
+    "jp": "ハイスコア：{0}",
+    "zh": "最高分：{0}",
+    "es": "Puntuación más alta: {0}",
+    "fr": "Meilleur score : {0}"
   },
   "21": {
     "key": "ui.victory.typo",
     "ko": "오타 개수 : {0}",
-    "eng": "Typos Count : {0}"
+    "eng": "Typos Count : {0}",
+    "jp": "タイプミス数：{0}",
+    "zh": "打错次数：{0}",
+    "es": "Errores tipográficos: {0}",
+    "fr": "Fautes de frappe : {0}"
+  },
+  "22": {
+    "key": "ui.how.second.dash2",
+    "ko": "대쉬하는 동안 스태미너를 소모합니다.\n단어를 올바르게 입력하면 스태미너를 회복합니다.",
+    "eng": "Dashing consumes stamina.\nYou can recover stamina by typing words correctly.",
+    "jp": "ダッシュ中はスタミナを消費します。\n単語を正しく入力するとスタミナが回復します。",
+    "zh": "冲刺时会消耗体力。\n正确输入单词可恢复体力。",
+    "es": "Correr consume energía.\nEscribe correctamente las palabras para recuperarla.",
+    "fr": "Sprinter consomme de l'endurance.\nTapez correctement les mots pour la récupérer."
   }
 }

@@ -131,6 +131,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 4
   runSpeed: 8
+  maxStamina: 100
+  currentStamina: 100
+  staminaDrainRate: 20
+  staminaRecoveryAmount: 25
+  minStaminaToRun: 0.1
   moveBlendSpeed: 8
   rotationBlendSpeed: 10
   animationSmoothTime: 0.15
@@ -175,8 +180,8 @@ MonoBehaviour:
   respawnDelay: 3
   respawnPosition: {x: 0, y: 0, z: 0}
   autoRespawn: 0
-  deathSoundClip: {fileID: 0}
-  deathSoundVolume: 1
+  deathSoundClip: {fileID: 8300000, guid: 1dc904b120aea44b58e588234674f5d7, type: 3}
+  deathSoundVolume: 0.6
   showDebugInfo: 1
   animator: {fileID: 8806933253480899900}
 --- !u!54 &7579798645395783635
