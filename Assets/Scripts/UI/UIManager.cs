@@ -365,8 +365,6 @@ public class UIManager : MonoBehaviour
             if (healthImages[i] != null)
                 // i번째 체력 칸이 현재 체력보다 작거나 같으면 활성화
                 healthImages[i].enabled = i < currentHealth;
-
-        Debug.Log($"체력 UI 업데이트: {currentHealth}/{maxHealth}");
     }
 
     /// <summary>
@@ -386,8 +384,6 @@ public class UIManager : MonoBehaviour
 
         // Fill Amount 설정
         staminaBarFill.fillAmount = staminaRatio;
-
-        Debug.Log($"스태미너 UI 업데이트: {currentStamina:F1}/{maxStamina} ({staminaRatio:P1})");
     }
 
     #endregion
