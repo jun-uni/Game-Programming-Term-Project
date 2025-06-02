@@ -3043,6 +3043,78 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3231526205936123718, guid: c30a7007c2aabae4fa27ef1b59ac2dce, type: 3}
   m_PrefabInstance: {fileID: 564116120}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1268650319
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1268650322}
+  - component: {fileID: 1268650321}
+  - component: {fileID: 1268650320}
+  m_Layer: 5
+  m_Name: Low Health Vignette
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1268650320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1268650319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 2800000, guid: d403c527d122e3046b152fa1949a7cb1, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+--- !u!222 &1268650321
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1268650319}
+  m_CullTransparentMesh: 1
+--- !u!224 &1268650322
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1268650319}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1976008600}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1275156193
 GameObject:
   m_ObjectHideFlags: 0
@@ -3119,12 +3191,13 @@ MonoBehaviour:
   mediumMaxLength: 6
   koreanEasyMaxJamo: 6
   koreanMediumMaxJamo: 9
-  easyWordChance: 0.5
-  mediumWordChance: 0.3
-  hardWordChance: 0.2
+  defaultEasyWordChance: 0.5
+  defaultMediumWordChance: 0.3
+  defaultHardWordChance: 0.2
   jsonFileName: english word list
   koreanJsonFileName: korean word list
   showLoadingInfo: 0
+  showDifficultyInfo: 1
 --- !u!4 &1320362555
 Transform:
   m_ObjectHideFlags: 0
@@ -40932,6 +41005,7 @@ RectTransform:
   - {fileID: 850998257}
   - {fileID: 696306847}
   - {fileID: 1080798218}
+  - {fileID: 1268650322}
   - {fileID: 967135229}
   - {fileID: 606871404}
   m_Father: {fileID: 0}
@@ -40971,6 +41045,11 @@ MonoBehaviour:
   thirdHealthImage: {fileID: 247511806}
   staminaBarBackground: {fileID: 1544225903}
   staminaBarFill: {fileID: 383597641}
+  lowHealthVignette: {fileID: 1268650320}
+  vignetteAnimationSpeed: 2
+  vignetteMaxAlpha: 0.6
+  vignetteColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  enableVignettePulse: 1
   gameUIContainer: {fileID: 1976008596}
   gameSceneNames:
   - MainScene

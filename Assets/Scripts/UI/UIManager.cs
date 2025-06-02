@@ -32,10 +32,20 @@ public class UIManager : MonoBehaviour
     [Header("스태미너")] [SerializeField] private Image staminaBarBackground; // 스태미너 바 배경
     [SerializeField] private Image staminaBarFill; // 스태미너 바 Fill
 
+    [Header("위험 상태 효과")] [SerializeField] private RawImage lowHealthVignette; // 체력 낮을 때 화면 가장자리 효과
+    [SerializeField] private float vignetteAnimationSpeed = 2f; // 비네팅 애니메이션 속도
+    [SerializeField] private float vignetteMaxAlpha = 0.4f; // 비네팅 최대 투명도 (0~1)
+    [SerializeField] private Color vignetteColor = new(1f, 0.2f, 0.2f, 1f); // 비네팅 색상 (빨간색)
+    [SerializeField] private bool enableVignettePulse = true; // 맥동 효과 활성화
+
     [Header("게임 UI 컨테이너")] [SerializeField]
     private GameObject gameUIContainer; // 게임 중에만 보일 UI들을 담을 컨테이너
 
     [Header("게임 씬 설정")] [SerializeField] private string[] gameSceneNames = { "MainScene" }; // 게임 씬 이름들
+
+    // 비네팅 효과 관련 변수들
+    private bool isLowHealth = false;
+    private Coroutine vignetteCoroutine = null;
 
     private void Awake()
     {
@@ -69,6 +79,9 @@ public class UIManager : MonoBehaviour
         // 씬 변경 이벤트 구독
         SceneManager.sceneLoaded += OnSceneLoaded;
 
+        // 비네팅 효과 초기화
+        InitializeVignette();
+
         // 현재 씬에 따라 UI 상태 설정
         UpdateUIVisibility();
     }
@@ -90,6 +103,133 @@ public class UIManager : MonoBehaviour
         // 씬 변경 이벤트 구독 해제
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
+
+    #region 비네팅 효과 시스템
+
+    /// <summary>
+    /// 비네팅 효과 초기화
+    /// </summary>
+    private void InitializeVignette()
+    {
+        if (lowHealthVignette != null)
+        {
+            // 초기 색상 설정
+            Color initialColor = vignetteColor;
+            initialColor.a = 0f; // 투명하게 시작
+            lowHealthVignette.color = initialColor;
+
+            // 비활성화 상태로 시작
+            lowHealthVignette.gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// 위험 상태 비네팅 효과 활성화/비활성화
+    /// </summary>
+    /// <param name="enable">활성화 여부</param>
+    private void SetLowHealthVignette(bool enable)
+    {
+        if (lowHealthVignette == null) return;
+
+        // 이미 같은 상태면 무시
+        if (isLowHealth == enable) return;
+
+        isLowHealth = enable;
+
+        // 기존 코루틴 정지
+        if (vignetteCoroutine != null)
+        {
+            StopCoroutine(vignetteCoroutine);
+            vignetteCoroutine = null;
+        }
+
+        if (enable)
+        {
+            // 비네팅 효과 활성화
+            lowHealthVignette.gameObject.SetActive(true);
+
+            if (enableVignettePulse)
+                // 맥동 효과 시작
+                vignetteCoroutine = StartCoroutine(VignettePulseEffect());
+            else
+                // 단순 페이드 인
+                vignetteCoroutine = StartCoroutine(FadeVignette(vignetteMaxAlpha));
+        }
+        else
+        {
+            // 비네팅 효과 비활성화 (페이드 아웃)
+            vignetteCoroutine = StartCoroutine(FadeVignetteOut());
+        }
+    }
+
+    /// <summary>
+    /// 비네팅 맥동 효과 코루틴
+    /// </summary>
+    private IEnumerator VignettePulseEffect()
+    {
+        while (isLowHealth)
+        {
+            // 페이드 인
+            yield return StartCoroutine(FadeVignette(vignetteMaxAlpha));
+
+            if (!isLowHealth) break;
+
+            // 페이드 아웃 (완전히 투명하지는 않게)
+            yield return StartCoroutine(FadeVignette(vignetteMaxAlpha * 0.3f));
+
+            if (!isLowHealth) break;
+        }
+    }
+
+    /// <summary>
+    /// 비네팅 페이드 효과 코루틴
+    /// </summary>
+    /// <param name="targetAlpha">목표 투명도</param>
+    private IEnumerator FadeVignette(float targetAlpha)
+    {
+        if (lowHealthVignette == null) yield break;
+
+        Color currentColor = lowHealthVignette.color;
+        float startAlpha = currentColor.a;
+        float elapsed = 0f;
+        float duration = 1f / vignetteAnimationSpeed;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            // 부드러운 애니메이션을 위한 easing
+            t = Mathf.SmoothStep(0f, 1f, t);
+
+            float newAlpha = Mathf.Lerp(startAlpha, targetAlpha, t);
+
+            Color newColor = vignetteColor;
+            newColor.a = newAlpha;
+            lowHealthVignette.color = newColor;
+
+            yield return null;
+        }
+
+        // 최종 값 설정
+        Color finalColor = vignetteColor;
+        finalColor.a = targetAlpha;
+        lowHealthVignette.color = finalColor;
+    }
+
+    /// <summary>
+    /// 비네팅 페이드 아웃 후 비활성화
+    /// </summary>
+    private IEnumerator FadeVignetteOut()
+    {
+        // 페이드 아웃
+        yield return StartCoroutine(FadeVignette(0f));
+
+        // 완전히 투명해지면 비활성화
+        if (lowHealthVignette != null) lowHealthVignette.gameObject.SetActive(false);
+    }
+
+    #endregion
 
     private void UpdateTimerUI(float remainingTime)
     {
@@ -131,6 +271,9 @@ public class UIManager : MonoBehaviour
     {
         GameOverContainer.gameObject.SetActive(false);
 
+        // 비네팅 효과도 리셋
+        SetLowHealthVignette(false);
+
         // 게임 상태 리셋 (재시작용)
         GameManager.Instance.RestartGame();
 
@@ -141,6 +284,9 @@ public class UIManager : MonoBehaviour
     public void OnHomeButtonClicked()
     {
         GameOverContainer.gameObject.SetActive(false);
+
+        // 비네팅 효과도 리셋
+        SetLowHealthVignette(false);
 
         // 게임 상태 완전 초기화 (홈으로 돌아가기)
         GameManager.Instance.ResetToHome();
@@ -163,6 +309,9 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        // 비네팅 효과 리셋
+        SetLowHealthVignette(false);
+
         UpdateUIVisibility();
     }
 
@@ -265,6 +414,10 @@ public class UIManager : MonoBehaviour
             staminaBarBackground.gameObject.SetActive(active);
         if (staminaBarFill != null)
             staminaBarFill.gameObject.SetActive(active);
+
+        // 비네팅 효과는 게임 씬이 아닐 때 강제 비활성화
+        if (!active)
+            SetLowHealthVignette(false);
     }
 
     #endregion
@@ -306,6 +459,9 @@ public class UIManager : MonoBehaviour
     {
         GameVictoryContainer.gameObject.SetActive(false);
 
+        // 비네팅 효과도 리셋
+        SetLowHealthVignette(false);
+
         // 게임 상태 리셋 (재시작용)
         GameManager.Instance.RestartGame();
 
@@ -316,6 +472,9 @@ public class UIManager : MonoBehaviour
     public void OnVictoryHomeButtonClicked()
     {
         GameVictoryContainer.gameObject.SetActive(false);
+
+        // 비네팅 효과도 리셋
+        SetLowHealthVignette(false);
 
         // 게임 상태 완전 초기화 (홈으로 돌아가기)
         GameManager.Instance.ResetToHome();
@@ -347,7 +506,7 @@ public class UIManager : MonoBehaviour
     #region 체력 & 스태미너
 
     /// <summary>
-    /// 플레이어 체력 UI 업데이트
+    /// 플레이어 체력 UI 업데이트 (비네팅 효과 포함)
     /// </summary>
     /// <param name="currentHealth">현재 체력</param>
     /// <param name="maxHealth">최대 체력</param>
@@ -365,6 +524,10 @@ public class UIManager : MonoBehaviour
             if (healthImages[i] != null)
                 // i번째 체력 칸이 현재 체력보다 작거나 같으면 활성화
                 healthImages[i].enabled = i < currentHealth;
+
+        // 체력이 1일 때 비네팅 효과 활성화, 그 외에는 비활성화
+        bool shouldShowVignette = currentHealth == 1;
+        SetLowHealthVignette(shouldShowVignette);
     }
 
     /// <summary>

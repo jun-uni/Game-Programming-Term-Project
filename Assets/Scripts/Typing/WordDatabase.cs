@@ -31,9 +31,14 @@ public class WordDatabase : MonoBehaviour
 
     [Tooltip("한국어 Medium 난이도 최대 자모 수")] public int koreanMediumMaxJamo = 9;
 
-    [Header("난이도 설정")] public float easyWordChance = 0.5f;
-    public float mediumWordChance = 0.3f;
-    public float hardWordChance = 0.2f;
+    [Header("기본 난이도 설정 (참고용)")] [Tooltip("기본 Easy 단어 확률 - 실제로는 GameManager에서 동적으로 결정됨")]
+    public float defaultEasyWordChance = 0.5f;
+
+    [Tooltip("기본 Medium 단어 확률 - 실제로는 GameManager에서 동적으로 결정됨")]
+    public float defaultMediumWordChance = 0.3f;
+
+    [Tooltip("기본 Hard 단어 확률 - 실제로는 GameManager에서 동적으로 결정됨")]
+    public float defaultHardWordChance = 0.2f;
 
     [Header("JSON 파일 설정")] [Tooltip("Resources 폴더 내 영어 JSON 파일명 (확장자 제외)")]
     public string jsonFileName = "english word list";
@@ -42,6 +47,7 @@ public class WordDatabase : MonoBehaviour
     public string koreanJsonFileName = "korean word list";
 
     [Header("디버그")] public bool showLoadingInfo = true;
+    public bool showDifficultyInfo = true;
 
     private void Awake()
     {
@@ -57,6 +63,123 @@ public class WordDatabase : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    private void Start()
+    {
+        // GameManager의 난이도 변경 이벤트 구독
+        GameManager.OnDifficultyChanged += OnDifficultyChanged;
+    }
+
+    private void OnDestroy()
+    {
+        // 이벤트 구독 해제
+        GameManager.OnDifficultyChanged -= OnDifficultyChanged;
+    }
+
+    /// <summary>
+    /// 난이도 변경 시 호출되는 콜백
+    /// </summary>
+    /// <param name="newDifficulty">새로운 난이도</param>
+    private void OnDifficultyChanged(DifficultyLevel newDifficulty)
+    {
+        if (showDifficultyInfo)
+        {
+            (float easy, float medium, float hard) chances = GetCurrentWordChances();
+            Debug.Log($"난이도 변경됨: {newDifficulty}");
+            Debug.Log($"단어 확률 - Easy: {chances.easy:P0}, Medium: {chances.medium:P0}, Hard: {chances.hard:P0}");
+        }
+    }
+
+    /// <summary>
+    /// 현재 난이도에 따른 단어 확률 가져오기
+    /// </summary>
+    /// <returns>현재 설정된 난이도의 단어 확률</returns>
+    private (float easy, float medium, float hard) GetCurrentWordChances()
+    {
+        // GameManager가 없으면 기본값 사용
+        if (GameManager.Instance == null)
+            return (defaultEasyWordChance, defaultMediumWordChance, defaultHardWordChance);
+
+        return GameManager.Instance.GetDifficultyWordChances();
+    }
+
+    public string GetRandomWord()
+    {
+        (float easy, float medium, float hard) chances = GetCurrentWordChances();
+        float random = Random.Range(0f, 1f);
+
+        if (random < chances.easy)
+            return GetRandomWordFromCategory(easyWords, "easy");
+        else if (random < chances.easy + chances.medium)
+            return GetRandomWordFromCategory(mediumWords, "medium");
+        else
+            return GetRandomWordFromCategory(hardWords, "hard");
+    }
+
+    public string GetRandomKoreanWord()
+    {
+        (float easy, float medium, float hard) chances = GetCurrentWordChances();
+        float random = Random.Range(0f, 1f);
+
+        if (random < chances.easy)
+            return GetRandomKoreanWordFromCategory(easyKoreanWords, "easy");
+        else if (random < chances.easy + chances.medium)
+            return GetRandomKoreanWordFromCategory(mediumKoreanWords, "medium");
+        else
+            return GetRandomKoreanWordFromCategory(hardKoreanWords, "hard");
+    }
+
+    public string GetWordByDifficulty(int difficulty)
+    {
+        switch (difficulty)
+        {
+            case 0: return GetRandomWordFromCategory(easyWords, "easy");
+            case 1: return GetRandomWordFromCategory(mediumWords, "medium");
+            case 2: return GetRandomWordFromCategory(hardWords, "hard");
+            default: return GetRandomWord();
+        }
+    }
+
+    public string GetKoreanWordByDifficulty(int difficulty)
+    {
+        switch (difficulty)
+        {
+            case 0: return GetRandomKoreanWordFromCategory(easyKoreanWords, "easy");
+            case 1: return GetRandomKoreanWordFromCategory(mediumKoreanWords, "medium");
+            case 2: return GetRandomKoreanWordFromCategory(hardKoreanWords, "hard");
+            default: return GetRandomKoreanWord();
+        }
+    }
+
+    private string GetRandomWordFromCategory(List<string> categoryWords, string categoryName)
+    {
+        if (categoryWords.Count == 0)
+        {
+            Debug.LogWarning($"영어 {categoryName} 카테고리가 비어있습니다. 전체 목록에서 선택합니다.");
+            if (allWords.Count > 0)
+                return allWords[Random.Range(0, allWords.Count)];
+            else
+                return "word"; // 최후의 수단
+        }
+
+        return categoryWords[Random.Range(0, categoryWords.Count)];
+    }
+
+    private string GetRandomKoreanWordFromCategory(List<string> categoryWords, string categoryName)
+    {
+        if (categoryWords.Count == 0)
+        {
+            Debug.LogWarning($"한국어 {categoryName} 카테고리가 비어있습니다. 전체 목록에서 선택합니다.");
+            if (allKoreanWords.Count > 0)
+                return allKoreanWords[Random.Range(0, allKoreanWords.Count)];
+            else
+                return "단어"; // 최후의 수단
+        }
+
+        return categoryWords[Random.Range(0, categoryWords.Count)];
+    }
+
+    #region JSON 로딩 (기존 코드와 동일)
 
     private void LoadWordsFromJSON()
     {
@@ -311,86 +434,15 @@ public class WordDatabase : MonoBehaviour
             "괴물"
         };
 
-
         allKoreanWords = new List<string>();
         allKoreanWords.AddRange(easyKoreanWords);
         allKoreanWords.AddRange(mediumKoreanWords);
         allKoreanWords.AddRange(hardKoreanWords);
     }
 
-    public string GetRandomWord()
-    {
-        float random = Random.Range(0f, 1f);
+    #endregion
 
-        if (random < easyWordChance)
-            return GetRandomWordFromCategory(easyWords, "easy");
-        else if (random < easyWordChance + mediumWordChance)
-            return GetRandomWordFromCategory(mediumWords, "medium");
-        else
-            return GetRandomWordFromCategory(hardWords, "hard");
-    }
-
-    public string GetRandomKoreanWord()
-    {
-        float random = Random.Range(0f, 1f);
-
-        if (random < easyWordChance)
-            return GetRandomKoreanWordFromCategory(easyKoreanWords, "easy");
-        else if (random < easyWordChance + mediumWordChance)
-            return GetRandomKoreanWordFromCategory(mediumKoreanWords, "medium");
-        else
-            return GetRandomKoreanWordFromCategory(hardKoreanWords, "hard");
-    }
-
-    public string GetWordByDifficulty(int difficulty)
-    {
-        switch (difficulty)
-        {
-            case 0: return GetRandomWordFromCategory(easyWords, "easy");
-            case 1: return GetRandomWordFromCategory(mediumWords, "medium");
-            case 2: return GetRandomWordFromCategory(hardWords, "hard");
-            default: return GetRandomWord();
-        }
-    }
-
-    public string GetKoreanWordByDifficulty(int difficulty)
-    {
-        switch (difficulty)
-        {
-            case 0: return GetRandomKoreanWordFromCategory(easyKoreanWords, "easy");
-            case 1: return GetRandomKoreanWordFromCategory(mediumKoreanWords, "medium");
-            case 2: return GetRandomKoreanWordFromCategory(hardKoreanWords, "hard");
-            default: return GetRandomKoreanWord();
-        }
-    }
-
-    private string GetRandomWordFromCategory(List<string> categoryWords, string categoryName)
-    {
-        if (categoryWords.Count == 0)
-        {
-            Debug.LogWarning($"영어 {categoryName} 카테고리가 비어있습니다. 전체 목록에서 선택합니다.");
-            if (allWords.Count > 0)
-                return allWords[Random.Range(0, allWords.Count)];
-            else
-                return "word"; // 최후의 수단
-        }
-
-        return categoryWords[Random.Range(0, categoryWords.Count)];
-    }
-
-    private string GetRandomKoreanWordFromCategory(List<string> categoryWords, string categoryName)
-    {
-        if (categoryWords.Count == 0)
-        {
-            Debug.LogWarning($"한국어 {categoryName} 카테고리가 비어있습니다. 전체 목록에서 선택합니다.");
-            if (allKoreanWords.Count > 0)
-                return allKoreanWords[Random.Range(0, allKoreanWords.Count)];
-            else
-                return "단어"; // 최후의 수단
-        }
-
-        return categoryWords[Random.Range(0, categoryWords.Count)];
-    }
+    #region 디버그 및 유틸리티
 
     /// <summary>
     /// 런타임에서 JSON 파일을 다시 로드 (개발/테스트용)
@@ -408,6 +460,12 @@ public class WordDatabase : MonoBehaviour
     [ContextMenu("Show Word Statistics")]
     public void ShowWordStatistics()
     {
+        (float easy, float medium, float hard) chances = GetCurrentWordChances();
+
+        Debug.Log(
+            $"=== 현재 난이도: {(GameManager.Instance != null ? GameManager.Instance.GetCurrentDifficulty().ToString() : "Unknown")} ===");
+        Debug.Log($"단어 확률 - Easy: {chances.easy:P0}, Medium: {chances.medium:P0}, Hard: {chances.hard:P0}");
+
         Debug.Log($"=== 영어 단어 통계 ===");
         Debug.Log($"전체: {allWords.Count}개");
         Debug.Log($"Easy: {easyWords.Count}개");
@@ -437,4 +495,32 @@ public class WordDatabase : MonoBehaviour
             Debug.Log(
                 $"Hard 예시: {string.Join(", ", hardKoreanWords.GetRange(0, Mathf.Min(5, hardKoreanWords.Count)))}");
     }
+
+    /// <summary>
+    /// 현재 난이도 기준으로 단어 10개 샘플링해서 보여주기 (테스트용)
+    /// </summary>
+    [ContextMenu("Show Current Difficulty Sample")]
+    public void ShowCurrentDifficultySample()
+    {
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning("GameManager가 없어서 샘플링할 수 없습니다.");
+            return;
+        }
+
+        DifficultyLevel difficulty = GameManager.Instance.GetCurrentDifficulty();
+        Debug.Log($"=== 현재 난이도 ({difficulty}) 샘플 단어 ===");
+
+        // 영어 단어 10개 샘플링
+        List<string> englishSamples = new();
+        for (int i = 0; i < 10; i++) englishSamples.Add(GetRandomWord());
+        Debug.Log($"영어 샘플: {string.Join(", ", englishSamples)}");
+
+        // 한국어 단어 10개 샘플링
+        List<string> koreanSamples = new();
+        for (int i = 0; i < 10; i++) koreanSamples.Add(GetRandomKoreanWord());
+        Debug.Log($"한국어 샘플: {string.Join(", ", koreanSamples)}");
+    }
+
+    #endregion
 }

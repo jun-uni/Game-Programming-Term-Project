@@ -5,10 +5,70 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 
+public enum DifficultyLevel
+{
+    Easy = 0,
+    Normal = 1,
+    Hard = 2
+}
+
 [DefaultExecutionOrder(-10)]
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+
+    #region 난이도 시스템
+
+    [Header("난이도 설정")] [SerializeField] private DifficultyLevel currentDifficulty = DifficultyLevel.Normal;
+
+    // 난이도 변경 이벤트 (WordDatabase가 구독할 수 있도록)
+    public static event Action<DifficultyLevel> OnDifficultyChanged;
+
+    /// <summary>
+    /// 현재 난이도 설정
+    /// </summary>
+    /// <param name="difficulty">설정할 난이도</param>
+    public void SetDifficulty(DifficultyLevel difficulty)
+    {
+        currentDifficulty = difficulty;
+        Debug.Log($"난이도 설정됨: {difficulty}");
+
+        // 난이도 변경 이벤트 발생
+        OnDifficultyChanged?.Invoke(difficulty);
+    }
+
+    /// <summary>
+    /// 현재 난이도 반환
+    /// </summary>
+    /// <returns>현재 설정된 난이도</returns>
+    public DifficultyLevel GetCurrentDifficulty()
+    {
+        return currentDifficulty;
+    }
+
+    /// <summary>
+    /// 난이도별 단어 확률 반환
+    /// </summary>
+    /// <returns>(easy확률, medium확률, hard확률)</returns>
+    public (float easy, float medium, float hard) GetDifficultyWordChances()
+    {
+        switch (currentDifficulty)
+        {
+            case DifficultyLevel.Easy:
+                return (0.7f, 0.25f, 0.05f); // 쉬운 단어 70%, 보통 25%, 어려운 5%
+
+            case DifficultyLevel.Normal:
+                return (0.5f, 0.3f, 0.2f); // 쉬운 단어 50%, 보통 30%, 어려운 20% (기본값)
+
+            case DifficultyLevel.Hard:
+                return (0.2f, 0.3f, 0.5f); // 쉬운 단어 20%, 보통 30%, 어려운 50%
+
+            default:
+                return (0.5f, 0.3f, 0.2f); // 기본값
+        }
+    }
+
+    #endregion
 
     #region 게임 상태 관리
 
@@ -71,7 +131,7 @@ public class GameManager : MonoBehaviour
     #region 게임 타이머 및 상태 관리
 
     /// <summary>
-    /// 게임 시작
+    /// 게임 시작 (난이도는 이미 설정되어 있음)
     /// </summary>
     public void StartGame()
     {
@@ -86,7 +146,7 @@ public class GameManager : MonoBehaviour
         // 시간 스케일 정상화
         Time.timeScale = 1.0f;
 
-        Debug.Log("게임 시작!");
+        Debug.Log($"게임 시작! (난이도: {currentDifficulty})");
 
         // UI 즉시 업데이트 (게임 시작 시 초기값으로)
         OnGameTimeUpdated?.Invoke(GetRemainingTime());
@@ -192,16 +252,43 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 최종 점수 계산
+    /// 최종 점수 계산 (난이도별 배수 적용)
     /// </summary>
     private int CalculateFinalScore()
     {
         int penalty = globalTypoCount * typoScorePenalty;
-        int finalScore = Mathf.Max(0, currentScore - penalty);
+        int baseScore = Mathf.Max(0, currentScore - penalty);
 
-        Debug.Log($"최종 점수 계산: {currentScore} - ({globalTypoCount} × {typoScorePenalty}) = {finalScore}");
+        // 난이도별 배수 적용
+        float difficultyMultiplier = GetDifficultyScoreMultiplier();
+        int finalScore = Mathf.RoundToInt(baseScore * difficultyMultiplier);
+
+        Debug.Log($"최종 점수 계산: ({currentScore} - {penalty}) × {difficultyMultiplier:F1} = {finalScore}");
+        Debug.Log($"난이도: {currentDifficulty}, 배수: {difficultyMultiplier:F1}");
 
         return finalScore;
+    }
+
+    /// <summary>
+    /// 난이도별 점수 배수 반환
+    /// </summary>
+    /// <returns>난이도별 점수 배수</returns>
+    private float GetDifficultyScoreMultiplier()
+    {
+        switch (currentDifficulty)
+        {
+            case DifficultyLevel.Easy:
+                return 0.8f; // 쉬운 난이도: 80%
+
+            case DifficultyLevel.Normal:
+                return 1.0f; // 보통 난이도: 100% (기본)
+
+            case DifficultyLevel.Hard:
+                return 1.2f; // 어려운 난이도: 120%
+
+            default:
+                return 1.0f; // 기본값
+        }
     }
 
     /// <summary>
@@ -286,7 +373,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 게임 재시작
+    /// 게임 재시작 (난이도는 유지)
     /// </summary>
     public void RestartGame()
     {
@@ -299,7 +386,7 @@ public class GameManager : MonoBehaviour
         // 시간 스케일 복구
         Time.timeScale = 1.0f;
 
-        Debug.Log("게임 상태 리셋 완료");
+        Debug.Log($"게임 상태 리셋 완료 (난이도 유지: {currentDifficulty})");
 
         // UI 업데이트 (즉시 실행)
         OnGameTimeUpdated?.Invoke(GetRemainingTime());
@@ -307,7 +394,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 홈으로 돌아갈 때 호출 (완전 초기화)
+    /// 홈으로 돌아갈 때 호출 (완전 초기화, 난이도는 Normal로 리셋)
     /// </summary>
     public void ResetToHome()
     {
@@ -317,10 +404,13 @@ public class GameManager : MonoBehaviour
         enemiesKilled = 0;
         globalTypoCount = 0;
 
+        // 난이도를 Normal로 리셋
+        currentDifficulty = DifficultyLevel.Normal;
+
         // 시간 스케일 복구
         Time.timeScale = 1.0f;
 
-        Debug.Log("홈으로 돌아가기 - 게임 상태 완전 초기화");
+        Debug.Log("홈으로 돌아가기 - 게임 상태 완전 초기화 (난이도 Normal로 리셋)");
 
         // UI 즉시 업데이트 (홈에서는 UI가 안 보이지만 상태는 초기화)
         OnGameTimeUpdated?.Invoke(GetRemainingTime());

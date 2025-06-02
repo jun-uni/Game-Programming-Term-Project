@@ -258,6 +258,57 @@ public static class LocalizationManager
             ["fr"] = "Sprinter consomme de l'endurance.\nTapez correctement les mots pour la récupérer."
         };
 
+        // ui.difficult.easy
+        localizedTexts["ui.difficult.easy"] = new Dictionary<string, string>
+        {
+            ["ko"] = "쉬움", ["eng"] = "Easy", ["es"] = "Fácil", ["fr"] = "Facile"
+        };
+
+        // ui.difficult.normal
+        localizedTexts["ui.difficult.normal"] = new Dictionary<string, string>
+        {
+            ["ko"] = "보통", ["eng"] = "Normal", ["es"] = "Normal", ["fr"] = "Normal"
+        };
+
+        // ui.difficult.hard
+        localizedTexts["ui.difficult.hard"] = new Dictionary<string, string>
+        {
+            ["ko"] = "어려움", ["eng"] = "Hard", ["es"] = "Difícil", ["fr"] = "Difficile"
+        };
+
+        // ui.difficult.select
+        localizedTexts["ui.difficult.select"] = new Dictionary<string, string>
+        {
+            ["ko"] = "난이도를 선택하세요.",
+            ["eng"] = "Select difficulty.",
+            ["es"] = "Seleccione la dificultad.",
+            ["fr"] = "Sélectionnez la difficulté."
+        };
+
+        // ui.how.third.difficult
+        localizedTexts["ui.how.third.difficult"] = new Dictionary<string, string>
+        {
+            ["ko"] =
+                "쉬움 난이도 : 짧은 단어가 더 자주 나옵니다. 점수 x 0.8\n\n보통 난이도 : 일반적인 난이도입니다.\n\n어려움 난이도 : 긴 단어가 더 자주 나옵니다. 점수 x 1.2",
+            ["eng"] =
+                "Easy difficulty: Short words appear more often. Score x 0.8\n\nNormal difficulty: This is the standard difficulty.\n\nHard difficulty: Long words appear more often. Score x 1.2",
+            ["es"] =
+                "Dificultad fácil: Las palabras cortas aparecen con más frecuencia. Puntuación x 0.8\n\nDificultad normal: Es la dificultad estándar.\n\nDificultad difícil: Las palabras largas aparecen con más frecuencia. Puntuación x 1.2",
+            ["fr"] =
+                "Difficulté facile : Les mots courts apparaissent plus souvent. Score x 0,8\n\nDifficulté normale : C'est la difficulté standard.\n\nDifficulté difficile : Les mots longs apparaissent plus souvent. Score x 1,2"
+        };
+
+        // ui.how.third.score
+        localizedTexts["ui.how.third.score"] = new Dictionary<string, string>
+        {
+            ["ko"] = "적을 처치하면 점수를 얻습니다.\n\n오타가 발생하면 점수를 잃습니다.",
+            ["eng"] = "You gain points by defeating enemies.\n\nYou lose points when you make a typo.",
+            ["es"] = "Obtienes puntos al derrotar enemigos.\n\nPierdes puntos si cometes un error tipográfico.",
+            ["fr"] =
+                "Vous gagnez des points en éliminant les ennemis.\n\nVous perdez des points en cas de faute de frappe."
+        };
+
+
         Debug.Log($"하드코딩 데이터 로드 완료 - {localizedTexts.Count}개 키");
     }
 
