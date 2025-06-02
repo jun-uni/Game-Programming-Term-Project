@@ -17,6 +17,8 @@ public class TypingManager : MonoBehaviour
 
     [Header("디버그")] public bool showDebugInfo = true;
 
+    [Header("한국어 지원")] public bool isKoreanMode = false;
+
     private void Awake()
     {
         if (Instance == null)
@@ -27,6 +29,43 @@ public class TypingManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        // 게임 언어에 따라 한국어 모드 설정
+        CheckLanguageMode();
+
+        // 언어 변경 이벤트 구독
+        LocalizationManager.OnLanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnDestroy()
+    {
+        // 이벤트 구독 해제
+        LocalizationManager.OnLanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(SystemLanguage newLanguage)
+    {
+        CheckLanguageMode();
+    }
+
+    private void CheckLanguageMode()
+    {
+        // LocalizationManager가 초기화되었는지 확인
+        if (LocalizationManager.IsInitialized)
+        {
+            isKoreanMode = LocalizationManager.GameLanguage == SystemLanguage.Korean;
+
+            if (showDebugInfo)
+                Debug.Log($"타이핑 모드 변경: {(isKoreanMode ? "한국어" : "영어")}");
+        }
+        else
+        {
+            // 초기화되지 않았다면 기본값 사용
+            isKoreanMode = false;
         }
     }
 
@@ -42,22 +81,148 @@ public class TypingManager : MonoBehaviour
         if (GameManager.Instance != null && !GameManager.Instance.IsGameActive())
             return;
 
-        // 키보드 입력 감지
-        foreach (char c in Input.inputString)
-            if (c == '\b') // 백스페이스
+        // 백스페이스 처리
+        if (Input.inputString.Contains("\b") && allowBackspace) HandleBackspace();
+
+        if (isKoreanMode)
+            // 한국어 모드: KeyCode로 쌍자음 지원
+            HandleKoreanKeyInput();
+        else
+            // 영어 모드: 기존 방식
+            foreach (char c in Input.inputString)
+                if (c != '\b' && IsValidInputCharacter(c))
+                    ProcessInputCharacter(c);
+    }
+
+    private bool IsValidInputCharacter(char c)
+    {
+        if (isKoreanMode)
+            // 한국어 모드: 영어 알파벳만 허용 (한글 자모로 변환됨)
+            return char.IsLetter(c) && c >= 'A' && c <= 'z';
+        else
+            // 영어 모드: 영문자만 허용
+            return char.IsLetter(c);
+    }
+
+    /// <summary>
+    /// 한국어 모드에서 KeyCode로 쌍자음 지원하는 입력 처리
+    /// </summary>
+    private void HandleKoreanKeyInput()
+    {
+        bool isShiftPressed = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+        // 한글 자모 키 매핑 체크
+        string koreanJamo = GetKoreanJamoFromKeyInput(isShiftPressed);
+
+        if (!string.IsNullOrEmpty(koreanJamo)) ProcessKoreanJamo(koreanJamo);
+    }
+
+    /// <summary>
+    /// 현재 프레임에서 눌린 키와 Shift 상태로 한글 자모 반환
+    /// </summary>
+    private string GetKoreanJamoFromKeyInput(bool isShiftPressed)
+    {
+        // 자음 (초성/종성)
+        if (Input.GetKeyDown(KeyCode.Q)) return isShiftPressed ? "ㅃ" : "ㅂ";
+        if (Input.GetKeyDown(KeyCode.W)) return isShiftPressed ? "ㅉ" : "ㅈ";
+        if (Input.GetKeyDown(KeyCode.E)) return isShiftPressed ? "ㄸ" : "ㄷ";
+        if (Input.GetKeyDown(KeyCode.R)) return isShiftPressed ? "ㄲ" : "ㄱ";
+        if (Input.GetKeyDown(KeyCode.T)) return isShiftPressed ? "ㅆ" : "ㅅ";
+        if (Input.GetKeyDown(KeyCode.A)) return "ㅁ";
+        if (Input.GetKeyDown(KeyCode.S)) return "ㄴ";
+        if (Input.GetKeyDown(KeyCode.D)) return "ㅇ";
+        if (Input.GetKeyDown(KeyCode.F)) return "ㄹ";
+        if (Input.GetKeyDown(KeyCode.G)) return "ㅎ";
+        if (Input.GetKeyDown(KeyCode.Z)) return "ㅋ";
+        if (Input.GetKeyDown(KeyCode.X)) return "ㅌ";
+        if (Input.GetKeyDown(KeyCode.C)) return "ㅊ";
+        if (Input.GetKeyDown(KeyCode.V)) return "ㅍ";
+
+        // 모음 (중성)
+        if (Input.GetKeyDown(KeyCode.Y)) return "ㅛ";
+        if (Input.GetKeyDown(KeyCode.U)) return "ㅕ";
+        if (Input.GetKeyDown(KeyCode.I)) return "ㅑ";
+        if (Input.GetKeyDown(KeyCode.O)) return isShiftPressed ? "ㅒ" : "ㅐ";
+        if (Input.GetKeyDown(KeyCode.P)) return isShiftPressed ? "ㅖ" : "ㅔ";
+        if (Input.GetKeyDown(KeyCode.H)) return "ㅗ";
+        if (Input.GetKeyDown(KeyCode.J)) return "ㅓ";
+        if (Input.GetKeyDown(KeyCode.K)) return "ㅏ";
+        if (Input.GetKeyDown(KeyCode.L)) return "ㅣ";
+        if (Input.GetKeyDown(KeyCode.B)) return "ㅠ";
+        if (Input.GetKeyDown(KeyCode.N)) return "ㅜ";
+        if (Input.GetKeyDown(KeyCode.M)) return "ㅡ";
+
+        return null; // 해당하는 키가 없음
+    }
+
+    /// <summary>
+    /// 영어 모드 입력 문자 처리
+    /// </summary>
+    private void ProcessInputCharacter(char inputChar)
+    {
+        // 영어 모드: 기존 방식
+        ProcessSingleCharacter(char.ToLower(inputChar));
+    }
+
+    private void ProcessKoreanJamo(string jamoInput)
+    {
+        if (showDebugInfo)
+            Debug.Log($"한글 자모 입력: '{jamoInput}'");
+
+        // 모든 타겟의 이전 진행도 저장
+        Dictionary<WordTarget, int> previousProgress = new();
+        foreach (WordTarget target in activeTargets)
+            previousProgress[target] = target.GetCurrentProgress();
+
+        // 각 타겟이 이 자모를 처리할 수 있는지 확인
+        Dictionary<WordTarget, int> individualTypoTargets = new();
+        List<WordTarget> acceptingTargets = new();
+
+        foreach (WordTarget target in activeTargets)
+        {
+            bool canAccept = target.CanAcceptNextJamo(jamoInput);
+
+            if (canAccept)
             {
-                if (allowBackspace) HandleBackspace();
+                // 이 타겟은 자모를 받을 수 있음
+                target.AcceptJamo(jamoInput);
+                acceptingTargets.Add(target);
+
+                if (showDebugInfo)
+                    Debug.Log(
+                        $"{target.GetDisplayWord()}: '{jamoInput}' 수용, 진행도 {previousProgress[target]} → {target.GetCurrentProgress()}");
             }
-            else if (char.IsLetter(c)) // 영문자만 허용
+            else
             {
-                ProcessSingleCharacter(char.ToLower(c));
+                // 이 타겟은 자모를 받을 수 없음 - 개별 오타
+                int prevProgress = previousProgress[target];
+                if (prevProgress > 0) // 진행 중이었다면 개별 오타
+                {
+                    individualTypoTargets[target] = prevProgress;
+                    target.TriggerIndividualTypo();
+
+                    if (showDebugInfo)
+                        Debug.Log($"{target.GetDisplayWord()}: '{jamoInput}' 개별 오타, 진행도 {prevProgress} → 0");
+                }
             }
+        }
+
+        // 전역 오타 체크 (기존과 동일한 로직)
+        if (CheckGlobalTypo(individualTypoTargets, acceptingTargets))
+        {
+            TriggerGlobalTypo();
+            return;
+        }
+
+        // 완성된 단어 체크
+        CheckCompletedWords();
     }
 
     private void HandleBackspace()
     {
-        // 모든 타겟에서 마지막 글자 제거
-        foreach (WordTarget target in activeTargets) target.HandleBackspace();
+        // 모든 타겟에서 마지막 글자/자모 제거
+        foreach (WordTarget target in activeTargets)
+            target.HandleBackspace();
 
         if (showDebugInfo)
             Debug.Log("백스페이스 처리됨");
@@ -70,7 +235,8 @@ public class TypingManager : MonoBehaviour
 
         // 모든 타겟의 이전 진행도 저장
         Dictionary<WordTarget, int> previousProgress = new();
-        foreach (WordTarget target in activeTargets) previousProgress[target] = target.GetCurrentProgress();
+        foreach (WordTarget target in activeTargets)
+            previousProgress[target] = target.GetCurrentProgress();
 
         // 각 타겟이 이 글자를 처리할 수 있는지 확인
         Dictionary<WordTarget, int> individualTypoTargets = new();
@@ -142,7 +308,7 @@ public class TypingManager : MonoBehaviour
             {
                 if (showDebugInfo)
                     Debug.Log(
-                        $"전역 오타 회피: {target.Word}가 더 진행됨 (진행도: {target.GetCurrentProgress()}, 오타 최대 진행도: {maxTypoProgress})");
+                        $"전역 오타 회피: {target.GetDisplayWord()}가 더 진행됨 (진행도: {target.GetCurrentProgress()}, 오타 최대 진행도: {maxTypoProgress})");
                 return false;
             }
 
@@ -159,7 +325,8 @@ public class TypingManager : MonoBehaviour
         typoTimer = typoEffectDuration;
 
         // GameManager에 전역 오타 발생 알림
-        if (GameManager.Instance != null) GameManager.Instance.AddGlobalTypo();
+        if (GameManager.Instance != null)
+            GameManager.Instance.AddGlobalTypo();
 
         // 개별 오타가 발생한 타겟들은 이미 TriggerIndividualTypo()로 리셋됨
         // 정상 진행 중인 타겟들은 그대로 유지
@@ -189,29 +356,47 @@ public class TypingManager : MonoBehaviour
             if (target.IsWordCompleted())
                 completedTargets.Add(target);
 
-        foreach (WordTarget completedTarget in completedTargets) CompleteWord(completedTarget);
+        foreach (WordTarget completedTarget in completedTargets)
+            CompleteWord(completedTarget);
     }
 
     private void CompleteWord(WordTarget target)
     {
         if (showDebugInfo)
-            Debug.Log($"단어 완성: {target.Word}");
+            Debug.Log($"단어 완성: {target.GetDisplayWord()}");
 
         target.OnWordCompleted();
     }
 
     public void RegisterTarget(WordTarget target)
     {
-        if (!activeTargets.Contains(target)) activeTargets.Add(target);
+        if (!activeTargets.Contains(target))
+            activeTargets.Add(target);
     }
 
     public void UnregisterTarget(WordTarget target)
     {
-        if (activeTargets.Contains(target)) activeTargets.Remove(target);
+        if (activeTargets.Contains(target))
+            activeTargets.Remove(target);
     }
 
     public bool IsGlobalTypo()
     {
         return isGlobalTypo;
+    }
+
+    public bool IsKoreanMode()
+    {
+        return isKoreanMode;
+    }
+
+    /// <summary>
+    /// 런타임에서 한국어 모드 강제 설정 (테스트용)
+    /// </summary>
+    [ContextMenu("Toggle Korean Mode")]
+    public void ToggleKoreanMode()
+    {
+        isKoreanMode = !isKoreanMode;
+        Debug.Log($"한국어 모드 토글: {isKoreanMode}");
     }
 }

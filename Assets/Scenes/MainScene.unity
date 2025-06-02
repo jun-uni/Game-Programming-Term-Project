@@ -541,7 +541,8 @@ MonoBehaviour:
   allowBackspace: 1
   typoEffectDuration: 0.5
   isGlobalTypo: 0
-  showDebugInfo: 0
+  showDebugInfo: 1
+  isKoreanMode: 0
 --- !u!4 &287065493
 Transform:
   m_ObjectHideFlags: 0
@@ -3110,12 +3111,19 @@ MonoBehaviour:
   mediumWords: []
   hardWords: []
   allWords: []
+  easyKoreanWords: []
+  mediumKoreanWords: []
+  hardKoreanWords: []
+  allKoreanWords: []
   easyMaxLength: 4
   mediumMaxLength: 6
+  koreanEasyMaxJamo: 6
+  koreanMediumMaxJamo: 9
   easyWordChance: 0.5
   mediumWordChance: 0.3
   hardWordChance: 0.2
   jsonFileName: english word list
+  koreanJsonFileName: korean word list
   showLoadingInfo: 0
 --- !u!4 &1320362555
 Transform:

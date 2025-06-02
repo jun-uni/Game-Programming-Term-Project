@@ -7,7 +7,7 @@ public class KoreanTool
 {
     public static string CombineKoreanCharacters(string jamoString)
     {
-        StringBuilder sb= new StringBuilder();
+        StringBuilder sb = new();
         string result = "";
 
         int[] cho_index = new int[2];
@@ -25,51 +25,28 @@ public class KoreanTool
 
                 if (jamoString[3] == 'ㅗ')
                 {
-                    if (jamoString[4] == 'ㅏ')
-                    {
-                        jung_index[1] = jungsungList.IndexOf('ㅘ');
-                    }
+                    if (jamoString[4] == 'ㅏ') jung_index[1] = jungsungList.IndexOf('ㅘ');
 
-                    if (jamoString[4] == 'ㅣ')
-                    {
-                        jung_index[1] = jungsungList.IndexOf('ㅚ');
-                    }
+                    if (jamoString[4] == 'ㅣ') jung_index[1] = jungsungList.IndexOf('ㅚ');
 
-                    if (jamoString[4] == 'ㅐ')
-                    {
-                        jung_index[1] = jungsungList.IndexOf('ㅙ');
-                    }
+                    if (jamoString[4] == 'ㅐ') jung_index[1] = jungsungList.IndexOf('ㅙ');
                 }
 
                 if (jamoString[3] == 'ㅜ')
                 {
-                    if (jamoString[4] == 'ㅓ')
-                    {
-                        jung_index[1] = jungsungList.IndexOf('ㅝ');
-                    }
+                    if (jamoString[4] == 'ㅓ') jung_index[1] = jungsungList.IndexOf('ㅝ');
 
-                    if (jamoString[4] == 'ㅣ')
-                    {
-                        jung_index[1] = jungsungList.IndexOf('ㅟ');
-                    }
+                    if (jamoString[4] == 'ㅣ') jung_index[1] = jungsungList.IndexOf('ㅟ');
 
-                    if (jamoString[4] == 'ㅔ')
-                    {
-                        jung_index[1] = jungsungList.IndexOf('ㅞ');
-                    }
+                    if (jamoString[4] == 'ㅔ') jung_index[1] = jungsungList.IndexOf('ㅞ');
                 }
 
-
-                if (jamoString[3] == 'ㅡ')
-                {
-                    jung_index[1] = jungsungList.IndexOf('ㅢ');
-                }
+                if (jamoString[3] == 'ㅡ') jung_index[1] = jungsungList.IndexOf('ㅢ');
 
                 sb.Append((char)(cho_index[0] * 21 * 28 + jung_index[0] * 28 + 0xAC00));
                 sb.Append((char)(cho_index[1] * 21 * 28 + jung_index[1] * 28 + 0xAC00));
-
             }
-            else                                        //ㄷㅐㄱㅏㅇ 처럼 두 번째 글자의 종성이 자음일 때
+            else //ㄷㅐㄱㅏㅇ 처럼 두 번째 글자의 종성이 자음일 때
             {
                 cho_index[1] = chosungList.IndexOf(jamoString[2]);
                 jung_index[1] = jungsungList.IndexOf(jamoString[3]);
@@ -77,55 +54,31 @@ public class KoreanTool
 
                 sb.Append((char)(cho_index[0] * 21 * 28 + jung_index[0] * 28 + 0xAC00));
                 sb.Append((char)(cho_index[1] * 21 * 28 + jung_index[1] * 28 + jong_index[1] + 0xAC00));
-
-
             }
         }
-        else                                         //ㄷㅗㅐㅈㅣ, ㄷㅗㅇㅎㅐ 처럼 첫 번째 글자가 초중종성으로 이루어져있을 때
+        else //ㄷㅗㅐㅈㅣ, ㄷㅗㅇㅎㅐ 처럼 첫 번째 글자가 초중종성으로 이루어져있을 때
         {
-            if (jungsungList.Contains(jamoString[2]))   //ㄷㅗㅐㅈㅣ 처럼 첫 번째 글자의 종성이 모음일 때
+            if (jungsungList.Contains(jamoString[2])) //ㄷㅗㅐㅈㅣ 처럼 첫 번째 글자의 종성이 모음일 때
             {
                 if (jamoString[1] == 'ㅗ')
                 {
-                    if (jamoString[2] == 'ㅏ')
-                    {
-                        jung_index[0] = jungsungList.IndexOf('ㅘ');
-                    }
+                    if (jamoString[2] == 'ㅏ') jung_index[0] = jungsungList.IndexOf('ㅘ');
 
-                    if (jamoString[2] == 'ㅣ')
-                    {
-                        jung_index[0] = jungsungList.IndexOf('ㅚ');
-                    }
+                    if (jamoString[2] == 'ㅣ') jung_index[0] = jungsungList.IndexOf('ㅚ');
 
-                    if (jamoString[2] == 'ㅐ')
-                    {
-                        jung_index[0] = jungsungList.IndexOf('ㅙ');
-                    }
+                    if (jamoString[2] == 'ㅐ') jung_index[0] = jungsungList.IndexOf('ㅙ');
                 }
 
                 if (jamoString[1] == 'ㅜ')
                 {
-                    if (jamoString[2] == 'ㅓ')
-                    {
-                        jung_index[0] = jungsungList.IndexOf('ㅝ');
-                    }
+                    if (jamoString[2] == 'ㅓ') jung_index[0] = jungsungList.IndexOf('ㅝ');
 
-                    if (jamoString[2] == 'ㅣ')
-                    {
-                        jung_index[0] = jungsungList.IndexOf('ㅟ');
-                    }
+                    if (jamoString[2] == 'ㅣ') jung_index[0] = jungsungList.IndexOf('ㅟ');
 
-                    if (jamoString[2] == 'ㅔ')
-                    {
-                        jung_index[0] = jungsungList.IndexOf('ㅞ');
-                    }
+                    if (jamoString[2] == 'ㅔ') jung_index[0] = jungsungList.IndexOf('ㅞ');
                 }
 
-
-                if (jamoString[1] == 'ㅡ')
-                {
-                    jung_index[0] = jungsungList.IndexOf('ㅢ');
-                }
+                if (jamoString[1] == 'ㅡ') jung_index[0] = jungsungList.IndexOf('ㅢ');
 
                 cho_index[1] = chosungList.IndexOf(jamoString[3]);
                 jung_index[1] = jungsungList.IndexOf(jamoString[4]);
@@ -133,7 +86,7 @@ public class KoreanTool
                 sb.Append((char)(cho_index[0] * 21 * 28 + jung_index[0] * 28 + 0xAC00));
                 sb.Append((char)(cho_index[1] * 21 * 28 + jung_index[1] * 28 + 0xAC00));
             }
-            else                                        //ㄷㅗㅇㅎㅐ 처럼 첫 번째 글자의 종성이 자음일 경우
+            else //ㄷㅗㅇㅎㅐ 처럼 첫 번째 글자의 종성이 자음일 경우
             {
                 jong_index[0] = jongsungList.IndexOf(jamoString[2]);
                 cho_index[1] = chosungList.IndexOf(jamoString[3]);
@@ -148,20 +101,17 @@ public class KoreanTool
         return result;
     }
 
-
-
     public static string[] SplitKoreanCharacters(string word)
     {
-        List<string> jamoList = new List<string>();
+        List<string> jamoList = new();
         foreach (char c in word)
-        {
             if (IsKoreanCharacter(c))
             {
                 int unicode = (int)c;
 
                 int chosungIndex = (unicode - 44032) / 588;
-                int jungsungIndex = ((unicode - 44032) % 588) / 28;
-                int jongsungIndex = ((unicode - 44032) % 588) % 28;
+                int jungsungIndex = (unicode - 44032) % 588 / 28;
+                int jongsungIndex = (unicode - 44032) % 588 % 28;
 
                 char chosung = chosungIndex >= 0 && chosungIndex < 19 ? chosungList[chosungIndex] : ' ';
                 char jungsung = jungsungIndex >= 0 && jungsungIndex < 21 ? jungsungList[jungsungIndex] : ' ';
@@ -198,7 +148,8 @@ public class KoreanTool
                 {
                     jamoList.Add('ㅗ'.ToString());
                     jamoList.Add('ㅐ'.ToString());
-                }else if(jungsung == 'ㅢ')
+                }
+                else if (jungsung == 'ㅢ')
                 {
                     jamoList.Add('ㅡ'.ToString());
                     jamoList.Add("ㅣ".ToString());
@@ -209,9 +160,70 @@ public class KoreanTool
                 }
 
                 if (jongsung != ' ')
-                    jamoList.Add(jongsung.ToString());
+                {
+                    // 복합 종성을 개별 자모로 분리
+                    if (jongsung == 'ㄳ')
+                    {
+                        jamoList.Add('ㄱ'.ToString());
+                        jamoList.Add('ㅅ'.ToString());
+                    }
+                    else if (jongsung == 'ㄵ')
+                    {
+                        jamoList.Add('ㄴ'.ToString());
+                        jamoList.Add('ㅈ'.ToString());
+                    }
+                    else if (jongsung == 'ㄶ')
+                    {
+                        jamoList.Add('ㄴ'.ToString());
+                        jamoList.Add('ㅎ'.ToString());
+                    }
+                    else if (jongsung == 'ㄺ')
+                    {
+                        jamoList.Add('ㄹ'.ToString());
+                        jamoList.Add('ㄱ'.ToString());
+                    }
+                    else if (jongsung == 'ㄻ')
+                    {
+                        jamoList.Add('ㄹ'.ToString());
+                        jamoList.Add('ㅁ'.ToString());
+                    }
+                    else if (jongsung == 'ㄼ')
+                    {
+                        jamoList.Add('ㄹ'.ToString());
+                        jamoList.Add('ㅂ'.ToString());
+                    }
+                    else if (jongsung == 'ㄽ')
+                    {
+                        jamoList.Add('ㄹ'.ToString());
+                        jamoList.Add('ㅅ'.ToString());
+                    }
+                    else if (jongsung == 'ㄾ')
+                    {
+                        jamoList.Add('ㄹ'.ToString());
+                        jamoList.Add('ㅌ'.ToString());
+                    }
+                    else if (jongsung == 'ㄿ')
+                    {
+                        jamoList.Add('ㄹ'.ToString());
+                        jamoList.Add('ㅍ'.ToString());
+                    }
+                    else if (jongsung == 'ㅀ')
+                    {
+                        jamoList.Add('ㄹ'.ToString());
+                        jamoList.Add('ㅎ'.ToString());
+                    }
+                    else if (jongsung == 'ㅄ')
+                    {
+                        jamoList.Add('ㅂ'.ToString());
+                        jamoList.Add('ㅅ'.ToString());
+                    }
+                    else
+                    {
+                        // 단일 종성
+                        jamoList.Add(jongsung.ToString());
+                    }
+                }
             }
-        }
 
         return jamoList.ToArray();
     }
@@ -223,20 +235,85 @@ public class KoreanTool
     }
 
     // 자모 리스트
-    private static readonly List<char> chosungList = new List<char> {
-    'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ',
-    'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
-};
+    private static readonly List<char> chosungList = new()
+    {
+        'ㄱ',
+        'ㄲ',
+        'ㄴ',
+        'ㄷ',
+        'ㄸ',
+        'ㄹ',
+        'ㅁ',
+        'ㅂ',
+        'ㅃ',
+        'ㅅ',
+        'ㅆ',
+        'ㅇ',
+        'ㅈ',
+        'ㅉ',
+        'ㅊ',
+        'ㅋ',
+        'ㅌ',
+        'ㅍ',
+        'ㅎ'
+    };
 
-    private static readonly List<char> jungsungList = new List<char> {
-    'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ',
-    'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'
-};
+    private static readonly List<char> jungsungList = new()
+    {
+        'ㅏ',
+        'ㅐ',
+        'ㅑ',
+        'ㅒ',
+        'ㅓ',
+        'ㅔ',
+        'ㅕ',
+        'ㅖ',
+        'ㅗ',
+        'ㅘ',
+        'ㅙ',
+        'ㅚ',
+        'ㅛ',
+        'ㅜ',
+        'ㅝ',
+        'ㅞ',
+        'ㅟ',
+        'ㅠ',
+        'ㅡ',
+        'ㅢ',
+        'ㅣ'
+    };
 
-    private static readonly List<char> jongsungList = new List<char> {
-    ' ', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ',  'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ',
-    'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
-};
+    private static readonly List<char> jongsungList = new()
+    {
+        ' ',
+        'ㄱ',
+        'ㄲ',
+        'ㄳ',
+        'ㄴ',
+        'ㄵ',
+        'ㄶ',
+        'ㄷ',
+        'ㄹ',
+        'ㄺ',
+        'ㄻ',
+        'ㄼ',
+        'ㄽ',
+        'ㄾ',
+        'ㄿ',
+        'ㅀ',
+        'ㅁ',
+        'ㅂ',
+        'ㅄ',
+        'ㅅ',
+        'ㅆ',
+        'ㅇ',
+        'ㅈ',
+        'ㅊ',
+        'ㅋ',
+        'ㅌ',
+        'ㅍ',
+        'ㅎ'
+    };
 
     public static string EnglishLetterToKoreanLetter(string letter)
     {
@@ -299,7 +376,24 @@ public class KoreanTool
         }
     }
 
-
-
-
+    /// <summary>
+    /// Shift 상태를 고려한 영어 키를 한글 자모로 변환
+    /// </summary>
+    public static string EnglishLetterToKoreanLetter(string letter, bool isShiftPressed)
+    {
+        if (isShiftPressed)
+            switch (letter.ToUpper())
+            {
+                case "Q": return "ㅃ"; // Shift+Q
+                case "W": return "ㅉ"; // Shift+W
+                case "E": return "ㄸ"; // Shift+E
+                case "R": return "ㄲ"; // Shift+R
+                case "T": return "ㅆ"; // Shift+T
+                case "O": return "ㅒ"; // Shift+O
+                case "P": return "ㅖ"; // Shift+P
+                default: return EnglishLetterToKoreanLetter(letter.ToUpper());
+            }
+        else
+            return EnglishLetterToKoreanLetter(letter.ToUpper());
+    }
 }
