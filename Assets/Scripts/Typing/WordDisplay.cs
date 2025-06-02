@@ -10,9 +10,11 @@ public class WordDisplay : MonoBehaviour
     [Header("색상 설정")] public Color defaultColor = Color.white;
     public Color typingColor = Color.yellow;
     public Color completedColor = Color.green;
+    public Color typoColor = Color.red;
 
     [Header("애니메이션")] public float bounceScale = 1.2f;
     public float animationDuration = 0.2f;
+    public float shakeIntensity = 0.02f;
 
     [Header("한국어 지원")] private bool isKoreanMode = false;
     private string[] koreanJamoArray;
@@ -294,6 +296,10 @@ public class WordDisplay : MonoBehaviour
         Vector3 originalScale = transform.localScale;
         Vector3 bounceTargetScale = originalScale * bounceScale;
 
+        // Rich Text 태그 없이 직접 색상 변경
+        wordText.text = currentWord; // Rich Text 태그 제거
+        wordText.color = completedColor;
+
         // 완성 애니메이션 - 원래 스케일 기준으로 상대적 크기 조정
         LeanTween.scale(gameObject, bounceTargetScale, animationDuration / 2)
             .setEase(LeanTweenType.easeOutBack)
@@ -307,9 +313,38 @@ public class WordDisplay : MonoBehaviour
                         ResetToDefaultColor();
                     });
             });
+    }
 
-        // 색상 변경
-        wordText.color = completedColor;
+    public void ShowTypoEffect()
+    {
+        // Rich Text 태그 없이 직접 색상 변경
+        wordText.text = currentWord; // Rich Text 태그 제거
+        wordText.color = typoColor;
+
+        // 기존 애니메이션 정리
+        LeanTween.cancel(gameObject);
+
+        // 원래 스케일 저장
+        Vector3 originalScale = transform.localScale;
+
+        // 펄스 효과 - 크기를 빠르게 확대했다 축소
+        LeanTween.scale(gameObject, originalScale * 1.1f, animationDuration / 4)
+            .setEase(LeanTweenType.easeOutQuad)
+            .setOnComplete(() =>
+            {
+                LeanTween.scale(gameObject, originalScale * 0.9f, animationDuration / 4)
+                    .setEase(LeanTweenType.easeInQuad)
+                    .setOnComplete(() =>
+                    {
+                        LeanTween.scale(gameObject, originalScale, animationDuration / 2)
+                            .setEase(LeanTweenType.easeOutBack)
+                            .setOnComplete(() =>
+                            {
+                                // 잠시 후 기본 색상으로 복원
+                                LeanTween.delayedCall(0.1f, () => { ResetToDefaultColor(); });
+                            });
+                    });
+            });
     }
 
     public void ResetToDefaultColor()
@@ -317,7 +352,8 @@ public class WordDisplay : MonoBehaviour
         if (wordText != null && !string.IsNullOrEmpty(currentWord))
         {
             typedCharacters = 0; // 진행상황도 초기화
-            UpdateDisplay(); // 전체적으로 다시 업데이트
+            wordText.color = Color.white; // 기본 흰색으로 복원
+            UpdateDisplay(); // 전체적으로 다시 업데이트 (Rich Text 태그 복원)
         }
     }
 }

@@ -8516,7 +8516,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameTimeLimit: 180
   scorePerEnemyKill: 100
-  typoScorePenalty: 50
+  typoScorePenalty: 10
   isGameActive: 0
   audioMixer: {fileID: 24100000, guid: f7164d6dea13b0f48a7f9db76d0a288c, type: 2}
   bgmSource: {fileID: 1961628272}

@@ -374,8 +374,10 @@ MonoBehaviour:
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
   typingColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   completedColor: {r: 0, g: 1, b: 0, a: 1}
+  typoColor: {r: 1, g: 0, b: 0, a: 1}
   bounceScale: 1.2
   animationDuration: 0.2
+  shakeIntensity: 0.02
 --- !u!1001 &5027314130653692122
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -619,7 +621,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 1.8
+  m_Speed: 2.5
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120

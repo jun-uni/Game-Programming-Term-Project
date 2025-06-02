@@ -210,7 +210,7 @@ public class TypingManager : MonoBehaviour
         // 전역 오타 체크 (기존과 동일한 로직)
         if (CheckGlobalTypo(individualTypoTargets, acceptingTargets))
         {
-            TriggerGlobalTypo();
+            TriggerGlobalTypo(individualTypoTargets.Keys);
             return;
         }
 
@@ -274,7 +274,7 @@ public class TypingManager : MonoBehaviour
         // 전역 오타 체크 (6번 규칙)
         if (CheckGlobalTypo(individualTypoTargets, acceptingTargets))
         {
-            TriggerGlobalTypo();
+            TriggerGlobalTypo(individualTypoTargets.Keys);
             return;
         }
 
@@ -317,7 +317,7 @@ public class TypingManager : MonoBehaviour
         return true; // 전역 오타
     }
 
-    private void TriggerGlobalTypo()
+    private void TriggerGlobalTypo(IEnumerable<WordTarget> typoTargets)
     {
         Debug.LogError("전역 오타 발생!");
 
@@ -327,6 +327,9 @@ public class TypingManager : MonoBehaviour
         // GameManager에 전역 오타 발생 알림
         if (GameManager.Instance != null)
             GameManager.Instance.AddGlobalTypo();
+
+        // 개별 오타가 발생한 타겟들에게 시각적 효과 적용
+        foreach (WordTarget target in typoTargets) target.ShowTypoEffect();
 
         // 개별 오타가 발생한 타겟들은 이미 TriggerIndividualTypo()로 리셋됨
         // 정상 진행 중인 타겟들은 그대로 유지

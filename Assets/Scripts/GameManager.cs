@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
 
     [Header("게임 설정")] [SerializeField] private float gameTimeLimit = 180f; // 3분 (초)
     [SerializeField] private int scorePerEnemyKill = 100; // 적 처치당 점수
-    [SerializeField] private int typoScorePenalty = 50; // 전역 오타당 점수 차감
+    [SerializeField] private int typoScorePenalty = 10; // 전역 오타당 점수 차감
 
     [Header("게임 상태")] public bool isGameActive = false;
     private float currentGameTime = 0f;

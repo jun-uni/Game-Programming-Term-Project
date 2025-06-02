@@ -145,6 +145,15 @@ public class WordTarget : MonoBehaviour
     }
 
     /// <summary>
+    /// 오타 시각적 효과 표시
+    /// </summary>
+    public void ShowTypoEffect()
+    {
+        if (wordDisplay != null)
+            wordDisplay.ShowTypoEffect();
+    }
+
+    /// <summary>
     /// 백스페이스 처리
     /// </summary>
     public void HandleBackspace()
