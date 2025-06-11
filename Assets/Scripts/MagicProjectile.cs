@@ -133,7 +133,7 @@ public class MagicProjectile : MonoBehaviour
         // Hit Sound 재생
         PlayHitSound();
 
-        // 타겟에 데미지 적용
+        // 타겟에 데미지 적용 (IEnemy 인터페이스 사용!)
         ApplyDamageToTarget();
 
         // 충돌 효과 (파티클 정지)
@@ -182,19 +182,30 @@ public class MagicProjectile : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 타겟에 데미지 적용 - IEnemy 인터페이스로 깔끔하게 처리!
+    /// </summary>
     private void ApplyDamageToTarget()
     {
         if (target == null) return;
 
-        // EnemyController에 데미지 적용
-        EnemyController enemyController = target.GetComponent<EnemyController>();
-        if (enemyController != null)
+        // IEnemy 인터페이스를 구현한 컴포넌트 찾기 (깔끔!)
+        IEnemy enemy = target.GetComponent<IEnemy>();
+        if (enemy != null)
         {
-            // OnHit 메서드를 통해 피격 처리 (데미지 적용과 애니메이션 재생 포함)
-            enemyController.OnHit((int)damage);
+            // IEnemy 인터페이스의 OnHit 메서드를 통해 피격 처리
+            enemy.OnHit((int)damage);
 
             if (showDebugInfo)
-                Debug.Log($"{target.name}에게 {damage} 데미지 적용");
+            {
+                string enemyType = enemy.GetType().Name;
+                Debug.Log($"{target.name}({enemyType})에게 {damage} 데미지 적용 - 남은 체력: {enemy.HitPoint}");
+            }
+        }
+        else
+        {
+            if (showDebugInfo)
+                Debug.LogWarning($"{target.name}에서 IEnemy 구현 컴포넌트를 찾을 수 없습니다!");
         }
     }
 

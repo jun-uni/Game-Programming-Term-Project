@@ -384,6 +384,8 @@ public class WordDatabase : MonoBehaviour
             "monster"
         };
 
+        //easyWords = new List<string> { "play", "pltt", "plapp" };
+
         allWords = new List<string>();
         allWords.AddRange(easyWords);
         allWords.AddRange(mediumWords);

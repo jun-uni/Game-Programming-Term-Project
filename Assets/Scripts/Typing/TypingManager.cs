@@ -6,7 +6,7 @@ public class TypingManager : MonoBehaviour
 {
     public static TypingManager Instance;
 
-    [Header("활성 타겟들")] private List<WordTarget> activeTargets = new();
+    [Header("활성 타겟들")] public List<WordTarget> activeTargets = new();
 
     [Header("입력 설정")] public bool allowBackspace = true;
 

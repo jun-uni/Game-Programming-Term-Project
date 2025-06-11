@@ -166,7 +166,7 @@ public class PlayerController : MonoBehaviour
         // Enemy Hand 태그 확인
         if (other.CompareTag("Enemy Hand"))
         {
-            // 부모 오브젝트에서 EnemyController 찾기
+            // 부모 오브젝트에서 EnemyController 찾기 (기존 방식 유지 - 근거리 적만 직접 공격)
             EnemyController enemy = other.GetComponentInParent<EnemyController>();
 
             if (enemy != null)
@@ -367,7 +367,7 @@ public class PlayerController : MonoBehaviour
             else
             {
                 if (showDebugInfo)
-                    Debug.Log($"공격 큐가 가득참. 공격 무시: {target.name}");
+                    Debug.Log($"공격 큐가 가득함. 공격 무시: {target.name}");
             }
         }
 
@@ -375,7 +375,7 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 공격 큐 처리 코루틴 - 죽은 적 검증 추가
+    /// 공격 큐 처리 코루틴 - 죽은 적 검증 추가 (IEnemy 사용)
     /// </summary>
     private System.Collections.IEnumerator ProcessAttackQueue()
     {
@@ -385,7 +385,7 @@ public class PlayerController : MonoBehaviour
         {
             Transform target = attackQueue.Dequeue();
 
-            // 타겟이 여전히 공격 가능한지 확인
+            // 타겟이 여전히 공격 가능한지 확인 (IEnemy 인터페이스 사용!)
             if (IsValidTarget(target))
             {
                 if (showDebugInfo)
@@ -408,7 +408,7 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 완전한 캐스팅 처리 - 중간에 타겟 죽음 체크 추가
+    /// 완전한 캐스팅 처리 - 중간에 타겟 죽음 체크 추가 (IEnemy 사용)
     /// </summary>
     private System.Collections.IEnumerator CastSpellAtTargetComplete(Transform target)
     {
@@ -418,7 +418,7 @@ public class PlayerController : MonoBehaviour
         if (showDebugInfo)
             Debug.Log($"마법 발사 시작: {target.name}");
 
-        // 1. 타겟 방향으로 회전 전에 다시 한 번 확인
+        // 1. 타겟 방향으로 회전 전에 다시 한 번 확인 (IEnemy 사용!)
         if (!IsValidTarget(target))
         {
             if (showDebugInfo)
@@ -432,7 +432,7 @@ public class PlayerController : MonoBehaviour
         // 2. 타겟 방향으로 회전
         yield return StartCoroutine(RotateToTarget(target));
 
-        // 3. 애니메이션 재생 전에 다시 한 번 확인
+        // 3. 애니메이션 재생 전에 다시 한 번 확인 (IEnemy 사용!)
         if (!IsValidTarget(target))
         {
             if (showDebugInfo)
@@ -498,11 +498,11 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 애니메이션 이벤트: 발사 타이밍 - 재검증 추가
+    /// 애니메이션 이벤트: 발사 타이밍 - 재검증 추가 (IEnemy 사용)
     /// </summary>
     public void OnCastFire()
     {
-        // 발사 직전에 타겟이 여전히 유효한지 확인
+        // 발사 직전에 타겟이 여전히 유효한지 확인 (IEnemy 사용!)
         if (IsValidTarget(currentCastTarget))
         {
             FireProjectile(currentCastTarget);
@@ -515,7 +515,6 @@ public class PlayerController : MonoBehaviour
             // 무효한 타겟이면 발사하지 않음
         }
     }
-
 
     /// <summary>
     /// 애니메이션 이벤트: 발사 애니메이션 완료
@@ -530,25 +529,53 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// 타겟이 공격 가능한 상태인지 확인
+    /// 타겟이 공격 가능한 상태인지 확인 - IEnemy 인터페이스로 깔끔하게 처리!
     /// </summary>
     private bool IsValidTarget(Transform target)
     {
         // 1. Transform이 null인지 확인
-        if (target == null) return false;
+        if (target == null)
+        {
+            if (showDebugInfo)
+                Debug.Log("타겟 검증 실패: Transform이 null");
+            return false;
+        }
 
         // 2. GameObject가 활성화되어 있는지 확인
-        if (!target.gameObject.activeInHierarchy) return false;
+        if (!target.gameObject.activeInHierarchy)
+        {
+            if (showDebugInfo)
+                Debug.Log($"타겟 검증 실패: {target.name} - GameObject가 비활성화됨");
+            return false;
+        }
 
-        // 3. EnemyController가 있고 살아있는지 확인
-        EnemyController enemy = target.GetComponent<EnemyController>();
-        if (enemy == null) return false;
+        // 3. IEnemy 인터페이스를 구현한 컴포넌트 찾기 (깔끔!)
+        IEnemy enemy = target.GetComponent<IEnemy>();
+        if (enemy == null)
+        {
+            if (showDebugInfo)
+                Debug.Log($"타겟 검증 실패: {target.name} - IEnemy 구현 컴포넌트가 없음");
+            return false;
+        }
 
-        // 4. 적이 죽지 않았는지 확인
-        if (enemy.isDie || enemy.state == EnemyState.DIE) return false;
+        // 4. 적이 죽지 않았는지 확인 (IEnemy 인터페이스 사용!)
+        if (enemy.IsDead)
+        {
+            if (showDebugInfo)
+                Debug.Log($"타겟 검증 실패: {target.name} - 적이 죽음");
+            return false;
+        }
 
-        // 5. 체력이 0 이하인지 확인
-        if (enemy.hitPoint <= 0) return false;
+        // 5. 체력이 0 이하인지 확인 (IEnemy 인터페이스 사용!)
+        if (enemy.HitPoint <= 0)
+        {
+            if (showDebugInfo)
+                Debug.Log($"타겟 검증 실패: {target.name} - 체력이 0 이하 ({enemy.HitPoint})");
+            return false;
+        }
+
+        if (showDebugInfo)
+            Debug.Log($"타겟 검증 성공: {target.name} - {enemy.GetType().Name} (체력: {enemy.HitPoint})");
 
         return true;
     }

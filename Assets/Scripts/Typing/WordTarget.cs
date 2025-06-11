@@ -2,23 +2,37 @@
 
 public class WordTarget : MonoBehaviour
 {
-    [Header("단어 설정")] public string Word { get; private set; }
+    [Header("단어 설정")] public string Word;
 
     [Header("한국어 지원")] private string[] koreanJamoArray; // 한국어일 때 자모 배열
     private bool isKoreanWord = false;
 
     [Header("컴포넌트")] private WordDisplay wordDisplay;
-    private EnemyController enemyController;
 
-    [Header("상태")] public bool IsCompleted { get; private set; } = false;
+    // IEnemy 인터페이스로 깔끔하게 통합!
+    private IEnemy enemy;
 
-    [Header("타이핑 진행 상태")] private int currentProgress = 0; // 현재 몇 글자/자모까지 입력되었는지
+    [Header("상태")] public bool IsCompleted = false;
+
+    [Header("타이핑 진행 상태")] [SerializeField] private int currentProgress = 0; // 현재 몇 글자/자모까지 입력되었는지
 
     private void Start()
     {
         // 컴포넌트 참조
         wordDisplay = GetComponentInChildren<WordDisplay>();
-        enemyController = GetComponent<EnemyController>();
+
+        // IEnemy 인터페이스를 구현한 컴포넌트 찾기 (깔끔!)
+        enemy = GetComponent<IEnemy>();
+
+        if (enemy != null)
+        {
+            string enemyType = enemy.GetType().Name;
+            Debug.Log($"{gameObject.name}: {enemyType}로 인식됨");
+        }
+        else
+        {
+            Debug.LogWarning($"{gameObject.name}: IEnemy를 구현한 컴포넌트를 찾을 수 없음!");
+        }
 
         // 랜덤 단어 할당
         AssignRandomWord();
@@ -355,6 +369,7 @@ public class WordTarget : MonoBehaviour
     public void ResetTypingProgress()
     {
         currentProgress = 0;
+        IsCompleted = false;
         UpdateDisplay();
 
         if (wordDisplay != null)
@@ -397,8 +412,10 @@ public class WordTarget : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        // 적이 아직 살아있고 게임오브젝트가 활성화되어 있으면 새 단어 할당
-        if (gameObject.activeInHierarchy && (enemyController == null || !enemyController.isDie))
+        // IEnemy 인터페이스로 깔끔하게 생존 상태 확인!
+        bool isEnemyAlive = enemy != null && !enemy.IsDead;
+
+        if (gameObject.activeInHierarchy && isEnemyAlive)
         {
             IsCompleted = false;
             AssignRandomWord();

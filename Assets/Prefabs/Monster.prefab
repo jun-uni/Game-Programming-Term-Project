@@ -678,7 +678,7 @@ MonoBehaviour:
   state: 0
   attackRange: 1.5
   isDie: 0
-  hitPoint: 100
+  hitPoint: 50
   isAttackActive: 0
   attackCooldown: 2
   isHit: 0
