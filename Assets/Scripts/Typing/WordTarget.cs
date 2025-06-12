@@ -57,7 +57,7 @@ public class WordTarget : MonoBehaviour
             TypingManager.Instance.UnregisterTarget(this);
     }
 
-    private void AssignRandomWord()
+    public void AssignRandomWord()
     {
         if (WordDatabase.Instance != null)
         {

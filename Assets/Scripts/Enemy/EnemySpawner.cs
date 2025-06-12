@@ -211,6 +211,8 @@ public class EnemySpawner : MonoBehaviour
     /// </summary>
     private void InitializeEnemy(GameObject enemy, EnemyType enemyType)
     {
+        WordTarget wordTarget = enemy.GetComponent<WordTarget>();
+
         switch (enemyType)
         {
             case EnemyType.Melee:
@@ -235,7 +237,21 @@ public class EnemySpawner : MonoBehaviour
 
                 break;
         }
+
+        // 새로운 단어 할당 (모든 적 타입 공통)
+        if (wordTarget != null)
+        {
+            wordTarget.AssignRandomWord();
+
+            if (showDebugInfo)
+                Debug.Log($"{enemy.name}에 새로운 단어 할당됨: {wordTarget.GetDisplayWord()}");
+        }
+        else
+        {
+            Debug.LogWarning($"{enemy.name}에서 WordTarget 컴포넌트를 찾을 수 없습니다!");
+        }
     }
+
 
     /// <summary>
     /// 적이 죽었을 때 풀로 반환 (EnemyController 또는 EnemyRangedController에서 호출)
