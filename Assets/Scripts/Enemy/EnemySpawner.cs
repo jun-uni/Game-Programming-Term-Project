@@ -7,8 +7,9 @@ public class EnemySpawner : MonoBehaviour
 {
     [Header("스폰 설정")] [SerializeField] private GameObject meleeEnemyPrefab; // 근거리 적 프리팹
     [SerializeField] private GameObject rangedEnemyPrefab; // 원거리 적 프리팹
-    [SerializeField] private float spawnRadius = 10f;
-    [SerializeField] private float minDistanceFromPlayer = 3f;
+    [SerializeField] private float meleeSpawnRadius = 13.5f; // 근거리 적 스폰 반경
+    [SerializeField] private float rangedSpawnRadius = 10f; // 원거리 적 스폰 반경 (더 작게)
+    [SerializeField] private float minDistanceFromPlayer = 5f;
     [SerializeField] private float spawnInterval = 5f;
     [SerializeField] private Transform player;
     [SerializeField] private bool showGizmoAlways = true;
@@ -127,16 +128,19 @@ public class EnemySpawner : MonoBehaviour
 
         GameObject enemy = null;
         string enemyTypeName = "";
+        float spawnRadius = 0f;
 
         switch (enemyTypeToSpawn)
         {
             case EnemyType.Melee:
                 enemy = GetMeleeEnemyFromPool();
                 enemyTypeName = "근거리";
+                spawnRadius = meleeSpawnRadius;
                 break;
             case EnemyType.Ranged:
                 enemy = GetRangedEnemyFromPool();
                 enemyTypeName = "원거리";
+                spawnRadius = rangedSpawnRadius;
                 break;
         }
 
@@ -147,8 +151,8 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        // 스폰 위치 계산
-        Vector3 spawnPos = GetRandomPosition(spawnRadius, minDistanceFromPlayer, player.position);
+        // 스폰 위치 계산 (스포너 기준으로 변경)
+        Vector3 spawnPos = GetRandomPositionFromSpawner(spawnRadius, minDistanceFromPlayer);
 
         // 적 배치 및 활성화
         enemy.transform.position = spawnPos;
@@ -240,25 +244,25 @@ public class EnemySpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// 플레이어로부터 일정 거리 떨어진 랜덤 위치 생성
+    /// 스포너로부터 일정 거리 떨어진 랜덤 위치 생성 (플레이어 최소 거리 고려)
     /// </summary>
-    private Vector3 GetRandomPosition(float radius, float minDistanceFromPlayer, Vector3 playerPosition)
+    private Vector3 GetRandomPositionFromSpawner(float radius, float minDistanceFromPlayer)
     {
         Vector3 randomPos;
         int attempts = 0;
 
         do
         {
-            // 플레이어 중심으로 랜덤 위치 생성
+            // 스포너 중심으로 랜덤 위치 생성
             float angle = Random.Range(0f, Mathf.PI * 2f);
-            float distance = Random.Range(minDistanceFromPlayer, radius);
-            float x = playerPosition.x + Mathf.Cos(angle) * distance;
-            float z = playerPosition.z + Mathf.Sin(angle) * distance;
-            randomPos = new Vector3(x, playerPosition.y, z);
+            float distance = Random.Range(0f, radius);
+            float x = transform.position.x + Mathf.Cos(angle) * distance;
+            float z = transform.position.z + Mathf.Sin(angle) * distance;
+            randomPos = new Vector3(x, transform.position.y, z);
 
             attempts++;
-            if (attempts > 20) break; // 무한 루프 방지
-        } while (Vector3.Distance(randomPos, playerPosition) < minDistanceFromPlayer);
+            if (attempts > 30) break; // 무한 루프 방지
+        } while (player != null && Vector3.Distance(randomPos, player.position) < minDistanceFromPlayer);
 
         return randomPos;
     }
@@ -319,15 +323,20 @@ public class EnemySpawner : MonoBehaviour
 
     private void DrawGizmo()
     {
-        Vector3 center = player != null ? player.position : transform.position;
+        Vector3 spawnerCenter = transform.position;
+        Vector3 playerCenter = player != null ? player.position : transform.position;
 
-        // 스폰 범위 (빨간색)
+        // 근거리 적 스폰 범위 (빨간색)
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(center, spawnRadius);
+        Gizmos.DrawWireSphere(spawnerCenter, meleeSpawnRadius);
+
+        // 원거리 적 스폰 범위 (파란색)
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(spawnerCenter, rangedSpawnRadius);
 
         // 플레이어 최소 거리 (노란색)
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(center, minDistanceFromPlayer);
+        Gizmos.DrawWireSphere(playerCenter, minDistanceFromPlayer);
 
         // 현재 활성 적 정보 표시
         if (Application.isPlaying) Gizmos.color = Color.white;
@@ -348,6 +357,7 @@ public class EnemySpawner : MonoBehaviour
 
         Debug.Log("=== Enemy Spawner 상태 ===");
         Debug.Log($"스폰 확률 - 근거리: {meleeChance:P0}, 원거리: {rangedChance:P0}");
+        Debug.Log($"스폰 반경 - 근거리: {meleeSpawnRadius}m, 원거리: {rangedSpawnRadius}m");
         Debug.Log($"활성 적: {currentActiveEnemies}/{maxActiveEnemies}");
 
         int activeMelee = 0, activeRanged = 0;
@@ -373,7 +383,7 @@ public class EnemySpawner : MonoBehaviour
         GameObject enemy = GetMeleeEnemyFromPool();
         if (enemy != null)
         {
-            Vector3 spawnPos = GetRandomPosition(spawnRadius, minDistanceFromPlayer, player.position);
+            Vector3 spawnPos = GetRandomPositionFromSpawner(meleeSpawnRadius, minDistanceFromPlayer);
             enemy.transform.position = spawnPos;
             InitializeEnemy(enemy, EnemyType.Melee);
             enemy.SetActive(true);
@@ -393,7 +403,7 @@ public class EnemySpawner : MonoBehaviour
         GameObject enemy = GetRangedEnemyFromPool();
         if (enemy != null)
         {
-            Vector3 spawnPos = GetRandomPosition(spawnRadius, minDistanceFromPlayer, player.position);
+            Vector3 spawnPos = GetRandomPositionFromSpawner(rangedSpawnRadius, minDistanceFromPlayer);
             enemy.transform.position = spawnPos;
             InitializeEnemy(enemy, EnemyType.Ranged);
             enemy.SetActive(true);

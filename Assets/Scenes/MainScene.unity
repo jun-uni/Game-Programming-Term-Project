@@ -1703,6 +1703,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7636675679910456789, guid: c30a7007c2aabae4fa27ef1b59ac2dce, type: 3}
+      propertyPath: staminaDrainRate
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 7636675679910456789, guid: c30a7007c2aabae4fa27ef1b59ac2dce, type: 3}
+      propertyPath: staminaRecoveryAmount
+      value: 25
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2488,9 +2496,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meleeEnemyPrefab: {fileID: 5261878100771700107, guid: d47e79a856520144ca1c6b028d627557, type: 3}
   rangedEnemyPrefab: {fileID: 7620711017022833755, guid: 75f0895682d224646bb682e6f30454a3, type: 3}
-  spawnRadius: 13.5
+  meleeSpawnRadius: 13.5
+  rangedSpawnRadius: 10
   minDistanceFromPlayer: 5
-  spawnInterval: 8
+  spawnInterval: 5
   player: {fileID: 1265586272}
   showGizmoAlways: 0
   meleeEnemyChance: 0.7

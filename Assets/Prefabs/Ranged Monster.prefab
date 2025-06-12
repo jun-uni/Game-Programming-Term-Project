@@ -434,6 +434,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 8a50b4932c6526a43ba29697c0895519, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 4426ae80e9479ce4386ce477186e714c, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -483,18 +487,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   monsterTransform: {fileID: 7100457971187785441}
   animator: {fileID: 3776769884671755419}
-  magicAttackPrefab: {fileID: 6113187972415903137, guid: 2346a9a86e913324c9a5e7092268be7c, type: 3}
+  magicAttackPrefab: {fileID: 5640630387976502827, guid: 46fc09c96bde6aa4e97cc542c2a905f6, type: 3}
   attackPositionOffset: 2
   wordTarget: {fileID: 6831027042092194301}
   wordDisplay: {fileID: 6836317478787983186}
   state: 0
   attackRange: 50
   isDie: 0
-  hitPoint: 100
+  hitPoint: 20
+  maxHitPoint: 20
   attackCooldown: 3
   isHit: 0
   hitDuration: 0.5
   exactPlayerPosition: 0
+  rotationSpeed: 5
+  predictPlayerMovement: 1
+  predictionTime: 1.5
+  predictionRandomRange: 1
+  predictionAttackChance: 0.5
+  mapCenter: {x: 0, y: 0, z: 0}
+  maxMagicSpawnRadius: 12
 --- !u!114 &6831027042092194301
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -507,6 +519,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b79a5b94e884bd5bf147d9043e3c0c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Word: 
+  IsCompleted: 0
+  currentProgress: 0
 --- !u!136 &3830892739558040219
 CapsuleCollider:
   m_ObjectHideFlags: 0

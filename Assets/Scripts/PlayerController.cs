@@ -186,6 +186,25 @@ public class PlayerController : MonoBehaviour
                         OnHit(enemy.transform.position);
                 }
         }
+        else if (other.CompareTag("Enemy Magic"))
+        {
+            // 마법 공격이 활성 상태인지만 확인
+            EnemyMagic meteorStrike = other.GetComponentInParent<EnemyMagic>();
+            if (meteorStrike != null && currentHitPoint > 0)
+            {
+                currentHitPoint -= 1; // 1씩 감소
+
+                // 체력 UI 업데이트
+                OnPlayerHealthChanged?.Invoke(currentHitPoint, maxHitPoint);
+
+                // 체력이 0 이하가 되면 죽음 처리
+                if (currentHitPoint <= 0)
+                    OnDeath();
+                else
+                    // 피격 처리
+                    OnHit(meteorStrike.transform.position);
+            }
+        }
     }
 
     #region Movement & Input

@@ -185,6 +185,13 @@ public class EnemyController : MonoBehaviour, IEnemy
         {
             yield return new WaitForSeconds(0.3f);
 
+            if (hitPoint <= 0 && state != EnemyState.DIE)
+            {
+                Debug.Log($"{gameObject.name} 체력 0 이하 감지 - 강제 사망 처리 (현재 체력: {hitPoint})");
+                state = EnemyState.DIE;
+                continue;
+            }
+
             // 사망 상태이거나 피격 중이면 상태 변경하지 않음
             if (state == EnemyState.DIE || isHit)
                 continue;
@@ -269,6 +276,8 @@ public class EnemyController : MonoBehaviour, IEnemy
                     // GameManager에 적 처치 점수 추가 알림
                     if (GameManager.Instance != null && GameManager.Instance.IsGameActive())
                         GameManager.Instance.AddEnemyKillScore();
+
+                    DisableAttackCollider();
 
                     // 죽으면 즉시 단어 비활성화
                     DisableWordDisplay();

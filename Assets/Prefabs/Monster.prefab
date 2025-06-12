@@ -514,7 +514,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.3
+  m_Radius: 0.35
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &3083655490923901268
 Rigidbody:
@@ -604,7 +604,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.3
+  m_Radius: 0.35
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &5261878100771700107 stripped
 GameObject:
@@ -621,7 +621,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 2.5
+  m_Speed: 4
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
@@ -679,6 +679,7 @@ MonoBehaviour:
   attackRange: 1.5
   isDie: 0
   hitPoint: 50
+  maxHitPoint: 50
   isAttackActive: 0
   attackCooldown: 2
   isHit: 0
@@ -695,3 +696,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b79a5b94e884bd5bf147d9043e3c0c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Word: 
+  IsCompleted: 0
+  currentProgress: 0

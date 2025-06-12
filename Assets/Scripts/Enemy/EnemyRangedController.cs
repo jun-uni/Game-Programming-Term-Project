@@ -99,7 +99,52 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
     /// </summary>
     [SerializeField] private bool exactPlayerPosition = false;
 
+    /// <summary>
+    /// 회전 속도 (플레이어를 바라보는 속도)
+    /// </summary>
+    [SerializeField] private float rotationSpeed = 5f;
+
+    [Header("플레이어 이동 예측 설정")]
+    /// <summary>
+    /// 플레이어 이동 방향을 예측할지 여부
+    /// </summary>
+    [SerializeField]
+    private bool predictPlayerMovement = true;
+
+    /// <summary>
+    /// 플레이어 이동 예측 시간 (초)
+    /// </summary>
+    [SerializeField] private float predictionTime = 1.5f;
+
+    /// <summary>
+    /// 예측된 위치 주변의 랜덤 범위
+    /// </summary>
+    [SerializeField] private float predictionRandomRange = 1f;
+
+    /// <summary>
+    /// 예측 공격을 할 확률 (0~1, 0.5 = 50%)
+    /// </summary>
+    [SerializeField] [Range(0f, 1f)] private float predictionAttackChance = 0.5f;
+
+    [Header("맵 경계 설정")]
+    /// <summary>
+    /// 맵 중심점 (보통 (0,0,0)이지만 조정 가능)
+    /// </summary>
+    [SerializeField]
+    private Vector3 mapCenter = Vector3.zero;
+
+    /// <summary>
+    /// 마법 소환 가능한 최대 반경 (맵 중심에서)
+    /// </summary>
+    [SerializeField] private float maxMagicSpawnRadius = 12f;
+
     private float lastAttackTime = 0f;
+
+    // 플레이어 이동 예측을 위한 변수들
+    private Vector3 lastPlayerPosition;
+    private Vector3 playerVelocity;
+    private float velocityUpdateInterval = 0.1f;
+    private float lastVelocityUpdateTime;
 
     #region IEnemy 인터페이스 구현
 
@@ -132,6 +177,79 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
 
         if (wordDisplay == null)
             wordDisplay = GetComponentInChildren<WordDisplay>(true);
+
+        // 플레이어 위치 초기화
+        if (playerTransform != null)
+            lastPlayerPosition = playerTransform.position;
+    }
+
+    /// <summary>
+    /// 매 프레임마다 플레이어 방향으로 회전 및 속도 계산
+    /// </summary>
+    private void Update()
+    {
+        // 사망하지 않은 상태에서만 플레이어를 바라봄
+        if (!isDie)
+        {
+            LookAtPlayer();
+            UpdatePlayerVelocity();
+        }
+    }
+
+    /// <summary>
+    /// 플레이어의 속도를 계산하여 업데이트
+    /// </summary>
+    private void UpdatePlayerVelocity()
+    {
+        if (playerTransform == null) return;
+
+        if (Time.time - lastVelocityUpdateTime >= velocityUpdateInterval)
+        {
+            Vector3 currentPlayerPosition = playerTransform.position;
+            playerVelocity = (currentPlayerPosition - lastPlayerPosition) / velocityUpdateInterval;
+            lastPlayerPosition = currentPlayerPosition;
+            lastVelocityUpdateTime = Time.time;
+        }
+    }
+
+    /// <summary>
+    /// 플레이어의 예상 위치를 계산
+    /// </summary>
+    private Vector3 GetPredictedPlayerPosition()
+    {
+        if (!predictPlayerMovement || playerTransform == null)
+            return playerTransform.position;
+
+        // 현재 플레이어 위치 + (속도 * 예측 시간)
+        Vector3 predictedPosition = playerTransform.position + playerVelocity * predictionTime;
+
+        // 예측 위치 주변에 약간의 랜덤성 추가
+        Vector3 randomOffset = new(
+            Random.Range(-predictionRandomRange, predictionRandomRange),
+            0,
+            Random.Range(-predictionRandomRange, predictionRandomRange)
+        );
+
+        return predictedPosition + randomOffset;
+    }
+
+    /// <summary>
+    /// 위치가 맵 경계 내에 있는지 확인하고, 필요시 경계 내로 조정
+    /// </summary>
+    private Vector3 ClampPositionToMapBounds(Vector3 position)
+    {
+        Vector3 directionFromCenter = position - mapCenter;
+        float distanceFromCenter = directionFromCenter.magnitude;
+
+        // 맵 경계를 벗어났다면 경계 내로 조정
+        if (distanceFromCenter > maxMagicSpawnRadius)
+        {
+            Vector3 clampedPosition = mapCenter + directionFromCenter.normalized * maxMagicSpawnRadius;
+            clampedPosition.y = position.y; // Y축은 유지
+            return clampedPosition;
+        }
+
+        return position;
     }
 
     private void OnEnable()
@@ -140,6 +258,13 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
         previousState = EnemyRangedState.IDLE;
         isHit = false;
         lastAttackTime = 0f;
+
+        // 플레이어 위치 초기화
+        if (playerTransform != null)
+        {
+            lastPlayerPosition = playerTransform.position;
+            playerVelocity = Vector3.zero;
+        }
 
         // 활성화 시 단어 표시 확인
         StartCoroutine(EnsureWordDisplayOnEnable());
@@ -156,6 +281,13 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
         while (!isDie)
         {
             yield return new WaitForSeconds(0.3f);
+
+            if (hitPoint <= 0 && state != EnemyRangedState.DIE)
+            {
+                Debug.Log($"{gameObject.name} 체력 0 이하 감지 - 강제 사망 처리 (현재 체력: {hitPoint})");
+                state = EnemyRangedState.DIE;
+                continue;
+            }
 
             // 사망 상태이거나 피격 중이면 상태 변경하지 않음
             if (state == EnemyRangedState.DIE || isHit)
@@ -178,13 +310,14 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
     }
 
     /// <summary>
-    /// Gizmo를 사용해 공격 범위를 시각적으로 표시.
+    /// Gizmo를 사용해 공격 범위와 맵 경계를 시각적으로 표시.
     /// </summary>
     private void OnDrawGizmos()
     {
         if (monsterTransform == null)
             monsterTransform = GetComponent<Transform>();
 
+        // 공격 범위 표시
         switch (state)
         {
             case EnemyRangedState.IDLE:
@@ -202,6 +335,22 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
             default:
                 break;
         }
+
+        // 맵 경계 표시 (마법 소환 가능 범위)
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(mapCenter, maxMagicSpawnRadius);
+
+        // 플레이어 예측 위치 표시 (게임 실행 중에만)
+        if (Application.isPlaying && predictPlayerMovement && playerTransform != null)
+        {
+            Vector3 predictedPos = GetPredictedPlayerPosition();
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(predictedPos, 0.5f);
+
+            // 예측 경로 라인
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(playerTransform.position, predictedPos);
+        }
     }
 
     /// <summary>
@@ -215,15 +364,12 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
             {
                 case EnemyRangedState.IDLE:
                     // Idle은 기본 상태이므로 별도 파라미터 설정 불필요
-                    // 플레이어 방향으로 회전
-                    LookAtPlayer();
+                    // 플레이어 방향 회전은 Update()에서 처리
                     break;
 
                 case EnemyRangedState.RANGED_ATTACK:
                     animator.SetBool(IsRangedAttack, true);
-
-                    // 플레이어 방향으로 회전
-                    LookAtPlayer();
+                    // 플레이어 방향 회전은 Update()에서 처리
                     break;
 
                 case EnemyRangedState.HIT:
@@ -280,13 +426,15 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
     /// </summary>
     private void LookAtPlayer()
     {
+        if (playerTransform == null) return;
+
         Vector3 direction = (playerTransform.position - transform.position).normalized;
         direction.y = 0; // Y축 회전만 적용
 
         if (direction != Vector3.zero)
         {
             Quaternion lookRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
         }
     }
 
@@ -366,14 +514,35 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
             }
             else
             {
-                // 플레이어 주변 랜덤 위치에 소환
+                Vector3 targetPosition;
+                bool usePrediction = false;
+
+                // 예측 모드가 켜져있고, 확률적으로 예측 공격을 선택
+                if (predictPlayerMovement && Random.Range(0f, 1f) <= predictionAttackChance)
+                {
+                    // 예측 공격: 플레이어의 이동 방향을 예측해서 공격
+                    targetPosition = GetPredictedPlayerPosition();
+                    usePrediction = true;
+                }
+                else
+                {
+                    // 기존 방식: 플레이어 현재 위치 기준
+                    targetPosition = playerTransform.position;
+                    usePrediction = false;
+                }
+
                 Vector3 randomOffset = new(
                     Random.Range(-attackPositionOffset, attackPositionOffset),
                     0,
                     Random.Range(-attackPositionOffset, attackPositionOffset)
                 );
-                spawnPosition = playerTransform.position + randomOffset;
+                spawnPosition = targetPosition + randomOffset;
+
+                Debug.Log($"공격 방식: {(usePrediction ? "예측 공격" : "랜덤 공격")} - 목표 위치: {targetPosition}");
             }
+
+            // 맵 경계 내로 위치 조정
+            spawnPosition = ClampPositionToMapBounds(spawnPosition);
 
             // 마법 공격 소환 (메테오, 원형 이펙트 등)
             GameObject magicAttack = Instantiate(magicAttackPrefab, spawnPosition, Quaternion.identity);
@@ -438,4 +607,31 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
 
         if (wordDisplay != null) wordDisplay.gameObject.SetActive(true);
     }
+
+    #region 디버그 메서드
+
+    /// <summary>
+    /// 현재 상태 정보 출력 (디버그용)
+    /// </summary>
+    [ContextMenu("Show Status")]
+    public void ShowStatus()
+    {
+        Debug.Log("=== 원거리 적 상태 ===");
+        Debug.Log($"체력: {hitPoint}/{maxHitPoint}");
+        Debug.Log($"상태: {state}");
+        Debug.Log($"이동 예측 모드: {predictPlayerMovement}");
+        Debug.Log($"예측 공격 확률: {predictionAttackChance:P0}");
+        Debug.Log($"플레이어 속도: {playerVelocity.magnitude:F2} m/s");
+        Debug.Log($"맵 중심: {mapCenter}, 최대 반경: {maxMagicSpawnRadius}");
+
+        if (playerTransform != null)
+        {
+            Vector3 predictedPos = GetPredictedPlayerPosition();
+            Debug.Log($"현재 플레이어 위치: {playerTransform.position}");
+            Debug.Log($"예측 플레이어 위치: {predictedPos}");
+            Debug.Log($"맵 경계 조정 후: {ClampPositionToMapBounds(predictedPos)}");
+        }
+    }
+
+    #endregion
 }
