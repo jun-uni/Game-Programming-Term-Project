@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -19,8 +20,8 @@ public class EnemySpawner : MonoBehaviour
 
     [SerializeField] [Range(0f, 1f)] private float rangedEnemyChance = 0.3f; // 원거리 적 스폰 확률 (30%)
 
-    [Header("오브젝트 풀 설정")] [SerializeField] private List<GameObject> meleeEnemyPool = new(); // 근거리 적 풀
-    [SerializeField] private List<GameObject> rangedEnemyPool = new(); // 원거리 적 풀
+    [Header("오브젝트 풀 설정")] [SerializeField] public List<GameObject> meleeEnemyPool = new(); // 근거리 적 풀
+    [SerializeField] public List<GameObject> rangedEnemyPool = new(); // 원거리 적 풀
     [SerializeField] private int maxMeleeEnemyCount = 30;
     [SerializeField] private int maxRangedEnemyCount = 10;
     [SerializeField] private int maxActiveEnemies = 10; // 동시에 활성화될 수 있는 최대 적 수
@@ -38,7 +39,21 @@ public class EnemySpawner : MonoBehaviour
     private void Start()
     {
         CreateEnemyPools();
-        InvokeRepeating(nameof(SpawnEnemy), 2f, spawnInterval);
+        StartCoroutine(SpawnEnemyCoroutine()); // InvokeRepeating 대신 코루틴 사용
+    }
+
+    private IEnumerator SpawnEnemyCoroutine()
+    {
+        yield return new WaitForSeconds(2f); // 초기 대기
+
+        while (true)
+        {
+            if (GameManager.Instance.IsGameActive()) SpawnEnemy();
+
+            // 버프를 고려한 스폰 간격
+            float currentInterval = EnemySpawnerExtensions.GetBuffedSpawnInterval(spawnInterval);
+            yield return new WaitForSeconds(currentInterval);
+        }
     }
 
     /// <summary>

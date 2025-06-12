@@ -160,8 +160,33 @@ public class TypingManager : MonoBehaviour
     /// </summary>
     private void ProcessInputCharacter(char inputChar)
     {
+        // 한글 입력 감지 (게임 언어가 영어일 때)
+        if (LocalizationManager.GameLanguage == SystemLanguage.English && IsKoreanCharacter(inputChar))
+        {
+            // 한/영 키 경고 표시
+            if (UIManager.Instance != null) UIManager.Instance.ShowKoreanEnglishKeyWarning();
+
+            if (showDebugInfo)
+                Debug.Log($"한글 입력 감지됨: '{inputChar}' - 경고 표시");
+
+            return; // 한글 입력은 처리하지 않음
+        }
+
         // 영어 모드: 기존 방식
         ProcessSingleCharacter(char.ToLower(inputChar));
+    }
+
+    /// <summary>
+    /// 한글 문자인지 확인
+    /// </summary>
+    private bool IsKoreanCharacter(char c)
+    {
+        // 한글 유니코드 범위 확인
+        return (c >= 0xAC00 && c <= 0xD7A3) || // 완성된 한글
+               (c >= 0x1100 && c <= 0x11FF) || // 한글 자모 (초성)
+               (c >= 0x3130 && c <= 0x318F) || // 한글 호환 자모
+               (c >= 0xA960 && c <= 0xA97F) || // 한글 자모 확장-A
+               (c >= 0xD7B0 && c <= 0xD7FF); // 한글 자모 확장-B
     }
 
     private void ProcessKoreanJamo(string jamoInput)

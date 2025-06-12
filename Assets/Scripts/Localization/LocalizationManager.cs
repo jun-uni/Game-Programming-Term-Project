@@ -308,6 +308,57 @@ public static class LocalizationManager
                 "Vous gagnez des points en éliminant les ennemis.\n\nVous perdez des points en cas de faute de frappe."
         };
 
+        // ui.game.koreankey.warning
+        localizedTexts["ui.game.koreankey.warning"] = new Dictionary<string, string>
+        {
+            ["ko"] = "한/영 키를 누르세요. 영어 입력이 안되고 있습니다.",
+            ["en"] = "Press the Korean/English key. English input is not working.",
+            ["es"] = "Presione la tecla de cambio coreano/inglés. La entrada en inglés no funciona.",
+            ["fr"] = "Appuyez sur la touche coréen/anglais. La saisie en anglais ne fonctionne pas."
+        };
+
+        // ui.game.buff.speedup
+        localizedTexts["ui.game.buff.speedup"] = new Dictionary<string, string>
+        {
+            ["ko"] = "플레이어 이동 속도 증가",
+            ["en"] = "Increases player movement speed",
+            ["es"] = "Aumenta la velocidad de movimiento del jugador",
+            ["fr"] = "Augmente la vitesse de déplacement du joueur"
+        };
+
+        // ui.game.buff.attackpowerup
+        localizedTexts["ui.game.buff.attackpowerup"] = new Dictionary<string, string>
+        {
+            ["ko"] = "플레이어 공격력 증가",
+            ["en"] = "Increases player attack power",
+            ["es"] = "Aumenta el poder de ataque del jugador",
+            ["fr"] = "Augmente la puissance d'attaque du joueur"
+        };
+
+        // ui.game.buff.heal
+        localizedTexts["ui.game.buff.heal"] = new Dictionary<string, string>
+        {
+            ["ko"] = "플레이어 회복", ["en"] = "Heals the player", ["es"] = "Cura al jugador", ["fr"] = "Soigne le joueur"
+        };
+
+        // ui.game.buff.slowenmies
+        localizedTexts["ui.game.buff.slowenmies"] = new Dictionary<string, string>
+        {
+            ["ko"] = "적군 이동 속도 감소",
+            ["en"] = "Slows enemy movement speed",
+            ["es"] = "Reduce la velocidad de movimiento del enemigo",
+            ["fr"] = "Ralentit la vitesse de déplacement des ennemis"
+        };
+
+        // ui.game.buff.slowenemyspawn
+        localizedTexts["ui.game.buff.slowenemyspawn"] = new Dictionary<string, string>
+        {
+            ["ko"] = "적군 소환 속도 감소",
+            ["en"] = "Slows enemy spawn rate",
+            ["es"] = "Reduce la velocidad de aparición de enemigos",
+            ["fr"] = "Ralentit la fréquence d'apparition des ennemis"
+        };
+
 
         Debug.Log($"하드코딩 데이터 로드 완료 - {localizedTexts.Count}개 키");
     }

@@ -169,7 +169,7 @@ public class EnemyRangedController : MonoBehaviour, IEnemy
         playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
 
         // EnemySpawner 참조 찾기 (풀 반환용)
-        enemySpawner = FindObjectOfType<EnemySpawner>();
+        enemySpawner = FindFirstObjectByType<EnemySpawner>();
 
         // WordTarget과 WordDisplay 자동 찾기 (Inspector에서 할당 안 된 경우)
         if (wordTarget == null)

@@ -114,6 +114,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e931b2e8aea3cf042b7a8f21a690e51a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6464565668640890874}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e931b2e8aea3cf042b7a8f21a690e51a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6120095785604484967}
   m_SourcePrefab: {fileID: 100100000, guid: e931b2e8aea3cf042b7a8f21a690e51a, type: 3}
 --- !u!1 &2851763014007285244 stripped
 GameObject:
@@ -136,8 +139,8 @@ MonoBehaviour:
   runSpeed: 6
   maxStamina: 100
   currentStamina: 100
-  staminaDrainRate: 30
-  staminaRecoveryAmount: 20
+  staminaDrainRate: 20
+  staminaRecoveryAmount: 25
   minStaminaToRun: 0.1
   moveBlendSpeed: 8
   rotationBlendSpeed: 10
@@ -334,6 +337,20 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &6120095785604484967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2851763014007285244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6769b85d1f214bc2bbe31c3e064b3bdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showDebugInfo: 1
+  buffParticlePrefab: {fileID: 897928448739813086, guid: bfb67c4654be9d6468db1ef85e9b1f6a, type: 3}
 --- !u!4 &4693840513258435066 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7670133295406278999, guid: e931b2e8aea3cf042b7a8f21a690e51a, type: 3}

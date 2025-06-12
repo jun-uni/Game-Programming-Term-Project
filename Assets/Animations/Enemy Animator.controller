@@ -195,7 +195,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Mutant Swiping
-  m_Speed: 1.8
+  m_Speed: 2.1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -7431570674449072090}
@@ -208,7 +208,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 778c60e6e370fff488778c6afeed6f26, type: 2}
+  m_Motion: {fileID: 7400000, guid: a34d31b40ed16774aa929169f9befefd, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 

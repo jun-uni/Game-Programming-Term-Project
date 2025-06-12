@@ -577,7 +577,7 @@ public class GameManager : MonoBehaviour
 
         while (player == null && waitTime < maxWaitTime)
         {
-            player = FindObjectOfType<PlayerController>();
+            player = FindFirstObjectByType<PlayerController>();
             if (player == null)
             {
                 yield return new WaitForSeconds(0.1f);

@@ -13,6 +13,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI highScoreText;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button homeButton;
+    [SerializeField] private AudioClip gameOverSound;
 
     [Header("게임 승리 창")] [SerializeField] private GameObject GameVictoryContainer;
     [SerializeField] private TextMeshProUGUI victoryScoreText;
@@ -20,6 +21,10 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI victoryTypoCountText;
     [SerializeField] private Button victoryRestartButton;
     [SerializeField] private Button victoryHomeButton;
+    [SerializeField] private AudioClip gameVictorySound;
+
+    [Header("효과음 오디오 소스")] [SerializeField]
+    private AudioSource audioSource;
 
     [Header("타이머")] [SerializeField] private TextMeshProUGUI timerText;
 
@@ -31,6 +36,14 @@ public class UIManager : MonoBehaviour
 
     [Header("스태미너")] [SerializeField] private Image staminaBarBackground; // 스태미너 바 배경
     [SerializeField] private Image staminaBarFill; // 스태미너 바 Fill
+
+    [Header("알림 시스템")] [SerializeField] private GameObject koreanEnglishKeyWarning;
+    [SerializeField] private GameObject buffDescription;
+    [SerializeField] private float notificationDuration = 3.0f;
+
+    // 알림 코루틴 관리용
+    private Coroutine koreanEnglishWarningCoroutine = null;
+    private Coroutine buffDescriptionCoroutine = null;
 
     [Header("위험 상태 효과")] [SerializeField] private RawImage lowHealthVignette; // 체력 낮을 때 화면 가장자리 효과
     [SerializeField] private float vignetteAnimationSpeed = 2f; // 비네팅 애니메이션 속도
@@ -103,6 +116,121 @@ public class UIManager : MonoBehaviour
         // 씬 변경 이벤트 구독 해제
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
+
+    #region 공통 알림 시스템
+
+    /// <summary>
+    /// 지정된 시간동안 UI 요소를 활성화하는 공통 함수
+    /// </summary>
+    /// <param name="uiElement">활성화할 UI 요소</param>
+    /// <param name="message">표시할 메시지</param>
+    /// <param name="duration">표시 시간</param>
+    /// <param name="currentCoroutine">현재 실행 중인 코루틴 참조</param>
+    /// <returns>새로운 코루틴</returns>
+    private Coroutine ShowTemporaryNotification(GameObject uiElement, string message, float duration,
+        Coroutine currentCoroutine)
+    {
+        // 게임 씬이 아니면 알림 표시 안함
+        if (!IsGameScene() || uiElement == null)
+            return null;
+
+        // 기존 코루틴이 있으면 중단
+        if (currentCoroutine != null)
+            StopCoroutine(currentCoroutine);
+
+        // 새로운 알림 표시 시작
+        return StartCoroutine(ShowNotificationCoroutine(uiElement, message, duration));
+    }
+
+    /// <summary>
+    /// 알림 표시 코루틴
+    /// </summary>
+    private IEnumerator ShowNotificationCoroutine(GameObject uiElement, string message, float duration)
+    {
+        // UI 요소 활성화
+        uiElement.SetActive(true);
+
+        // 메시지 설정
+        TextMeshProUGUI textComponent = uiElement.GetComponentInChildren<TextMeshProUGUI>();
+        if (textComponent != null) textComponent.text = message;
+
+        // 지정된 시간만큼 대기
+        yield return new WaitForSeconds(duration);
+
+        // UI 요소 비활성화
+        uiElement.SetActive(false);
+    }
+
+    #endregion
+
+    #region 한/영키 경고
+
+    /// <summary>
+    /// 한/영 키 경고 표시
+    /// </summary>
+    public void ShowKoreanEnglishKeyWarning()
+    {
+        string message = "ui.game.koreankey.warning".Localize();
+        koreanEnglishWarningCoroutine = ShowTemporaryNotification(
+            koreanEnglishKeyWarning,
+            message,
+            notificationDuration,
+            koreanEnglishWarningCoroutine
+        );
+    }
+
+    /// <summary>
+    /// 한/영 키 경고 즉시 숨기기
+    /// </summary>
+    public void HideKoreanEnglishKeyWarning()
+    {
+        if (koreanEnglishWarningCoroutine != null)
+        {
+            StopCoroutine(koreanEnglishWarningCoroutine);
+            koreanEnglishWarningCoroutine = null;
+        }
+
+        if (koreanEnglishKeyWarning != null)
+            koreanEnglishKeyWarning.SetActive(false);
+    }
+
+    #endregion
+
+    #region 버프 설명
+
+    /// <summary>
+    /// 버프 설명 표시
+    /// </summary>
+    /// <param name="buffData">버프 데이터</param>
+    public void ShowBuffDescription(BuffData buffData)
+    {
+        if (buffData == null) return;
+
+        string message = $"{buffData.description.Localize()}";
+        buffDescriptionCoroutine = ShowTemporaryNotification(
+            buffDescription,
+            message,
+            notificationDuration,
+            buffDescriptionCoroutine
+        );
+    }
+
+    /// <summary>
+    /// 버프 설명 즉시 숨기기
+    /// </summary>
+    public void HideBuffDescription()
+    {
+        if (buffDescriptionCoroutine != null)
+        {
+            StopCoroutine(buffDescriptionCoroutine);
+            buffDescriptionCoroutine = null;
+        }
+
+        if (buffDescription != null)
+            buffDescription.SetActive(false);
+    }
+
+    #endregion
 
     #region 비네팅 효과 시스템
 
@@ -231,6 +359,8 @@ public class UIManager : MonoBehaviour
 
     #endregion
 
+    // 나머지 기존 코드들...
+
     private void UpdateTimerUI(float remainingTime)
     {
         // 게임 씬이 아니면 타이머 UI 업데이트 건너뛰기
@@ -260,6 +390,10 @@ public class UIManager : MonoBehaviour
         // 다시 한번 게임 씬인지 확인 (딜레이 중에 씬이 바뀔 수 있음)
         if (!IsGameScene())
             yield break;
+
+        // 승리 사운드 재생
+        if (gameOverSound != null && audioSource != null) audioSource.PlayOneShot(gameOverSound);
+
 
         GameManager.Instance.StopGame();
         GameOverContainer.gameObject.SetActive(true);
@@ -374,7 +508,7 @@ public class UIManager : MonoBehaviour
         }
 
         // 플레이어가 존재하면 체력 & 스태미너 UI 업데이트
-        PlayerController player = FindObjectOfType<PlayerController>();
+        PlayerController player = FindFirstObjectByType<PlayerController>();
         if (player != null)
         {
             UpdateHealthUI(player.GetCurrentHitPoint(), 3); // maxHealth는 3으로 고정
@@ -440,6 +574,9 @@ public class UIManager : MonoBehaviour
         // 다시 한번 게임 씬인지 확인 (딜레이 중에 씬이 바뀔 수 있음)
         if (!IsGameScene())
             yield break;
+
+        // 승리 사운드 재생
+        if (gameVictorySound != null && audioSource != null) audioSource.PlayOneShot(gameVictorySound);
 
         GameManager.Instance.StopGame();
         GameVictoryContainer.gameObject.SetActive(true);

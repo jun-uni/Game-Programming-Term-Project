@@ -128,7 +128,7 @@ public class EnemyController : MonoBehaviour, IEnemy
         playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
 
         // EnemySpawner 참조 찾기 (풀 반환용)
-        enemySpawner = FindObjectOfType<EnemySpawner>();
+        enemySpawner = FindFirstObjectByType<EnemySpawner>();
 
         // WordTarget과 WordDisplay 자동 찾기 (Inspector에서 할당 안 된 경우)
         if (wordTarget == null)
@@ -161,10 +161,14 @@ public class EnemyController : MonoBehaviour, IEnemy
         isAttackActive = false;
         isHit = false;
 
+        if (agent != null) agent.speed = 4.0f; // 기본 속도로 리셋 (적절한 값으로 설정)
+
         DisableAttackCollider();
 
         // 활성화 시 단어 표시 확인
         StartCoroutine(EnsureWordDisplayOnEnable());
+
+        SlowEnemiesBuff.ApplySlowToNewEnemy(agent);
 
         StartCoroutine(CheckMonsterState());
         StartCoroutine(MonsterAction());

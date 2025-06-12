@@ -189,17 +189,18 @@ public class MagicProjectile : MonoBehaviour
     {
         if (target == null) return;
 
-        // IEnemy 인터페이스를 구현한 컴포넌트 찾기 (깔끔!)
         IEnemy enemy = target.GetComponent<IEnemy>();
         if (enemy != null)
         {
-            // IEnemy 인터페이스의 OnHit 메서드를 통해 피격 처리
-            enemy.OnHit((int)damage);
+            // 버프를 적용한 데미지 계산
+            int finalDamage = MagicProjectileExtensions.GetBuffedDamage((int)damage);
+
+            enemy.OnHit(finalDamage);
 
             if (showDebugInfo)
             {
                 string enemyType = enemy.GetType().Name;
-                Debug.Log($"{target.name}({enemyType})에게 {damage} 데미지 적용 - 남은 체력: {enemy.HitPoint}");
+                Debug.Log($"{target.name}({enemyType})에게 {finalDamage} 데미지 적용 - 남은 체력: {enemy.HitPoint}");
             }
         }
         else
