@@ -391,14 +391,19 @@ public class UIManager : MonoBehaviour
         if (!IsGameScene())
             yield break;
 
-        // 승리 사운드 재생
-        if (gameOverSound != null && audioSource != null) audioSource.PlayOneShot(gameOverSound);
-
+        // 게임오버 사운드 재생
+        if (gameOverSound != null && audioSource != null)
+            audioSource.PlayOneShot(gameOverSound);
 
         GameManager.Instance.StopGame();
         GameOverContainer.gameObject.SetActive(true);
-        scoreText.text = $"{"ui.gameover.score".Localize(GameManager.Instance.GetCurrentScore())}";
-        highScoreText.text = $"{"ui.gameover.highscore".Localize(GameManager.Instance.GetHighScore())}";
+
+        // 수정: GetFinalScore()를 사용하여 실제 저장되는 점수와 동일하게 표시
+        int finalScore = GameManager.Instance.GetFinalScore(); // 오타 페널티 적용 후
+        int highScore = GameManager.Instance.GetHighScore();
+
+        scoreText.text = $"{"ui.gameover.score".Localize(finalScore)}";
+        highScoreText.text = $"{"ui.gameover.highscore".Localize(highScore)}";
     }
 
     public void OnRestartButtonClicked()
