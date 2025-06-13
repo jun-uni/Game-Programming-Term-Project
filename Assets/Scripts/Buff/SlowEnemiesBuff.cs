@@ -100,4 +100,15 @@ public class SlowEnemiesBuff : BaseBuff
             agent.speed = originalEnemySpeed * EnemySpeedMultiplier;
         }
     }
+
+    /// <summary>
+    /// 게임 종료/재시작 시 static 변수 초기화
+    /// </summary>
+    public static void ResetStaticValues()
+    {
+        IsSlowEnemiesBuffActive = false;
+        EnemySpeedMultiplier = 1f;
+        originalEnemySpeed = -1f;
+        Debug.Log("SlowEnemiesBuff static 값 초기화");
+    }
 }

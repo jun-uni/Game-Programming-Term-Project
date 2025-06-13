@@ -24,4 +24,15 @@ public class SlowEnemySpawnBuff : BaseBuff
 
         Debug.Log("적 스폰 속도 감소 버프 해제");
     }
+
+
+    /// <summary>
+    /// 게임 종료/재시작 시 static 변수 초기화
+    /// </summary>
+    public static void ResetStaticValues()
+    {
+        IsSlowSpawnBuffActive = false;
+        SpawnRateMultiplier = 1f;
+        Debug.Log("SlowEnemySpawnBuff static 값 초기화");
+    }
 }

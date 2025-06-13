@@ -59,6 +59,37 @@ public class BuffManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 모든 버프 강제 제거 (게임 종료/재시작 시 사용)
+    /// </summary>
+    public void ClearAllBuffs()
+    {
+        // 모든 활성 버프 제거
+        for (int i = activeBuffs.Count - 1; i >= 0; i--)
+        {
+            IBuff buff = activeBuffs[i];
+            buff.Remove(gameObject);
+        }
+
+        activeBuffs.Clear();
+        buffsByType.Clear();
+
+        if (showDebugInfo)
+            Debug.Log("모든 버프가 강제 제거되었습니다.");
+    }
+
+    /// <summary>
+    /// 모든 버프의 static 값 초기화
+    /// </summary>
+    public static void ResetAllBuffStaticValues()
+    {
+        AttackPowerUpBuff.ResetStaticValues();
+        SlowEnemiesBuff.ResetStaticValues();
+        SlowEnemySpawnBuff.ResetStaticValues();
+
+        Debug.Log("모든 버프의 static 값이 초기화되었습니다.");
+    }
+
     private void Update()
     {
         if (!GameManager.Instance.IsGameActive()) return;

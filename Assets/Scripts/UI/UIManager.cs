@@ -422,10 +422,7 @@ public class UIManager : MonoBehaviour
     {
         GameOverContainer.gameObject.SetActive(false);
 
-        // 비네팅 효과도 리셋
-        SetLowHealthVignette(false);
-
-        HideAllNotifications();
+        ResetAllGameSystems();
 
         // 게임 상태 리셋 (재시작용)
         GameManager.Instance.RestartGame();
@@ -438,10 +435,7 @@ public class UIManager : MonoBehaviour
     {
         GameOverContainer.gameObject.SetActive(false);
 
-        // 비네팅 효과도 리셋
-        SetLowHealthVignette(false);
-
-        HideAllNotifications();
+        ResetAllGameSystems();
 
         // 게임 상태 완전 초기화 (홈으로 돌아가기)
         GameManager.Instance.ResetToHome();
@@ -464,12 +458,9 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // 비네팅 효과 리셋
-        SetLowHealthVignette(false);
+        ResetAllGameSystems();
 
         UpdateUIVisibility();
-
-        HideAllNotifications();
     }
 
     /// <summary>
@@ -619,10 +610,7 @@ public class UIManager : MonoBehaviour
     {
         GameVictoryContainer.gameObject.SetActive(false);
 
-        // 비네팅 효과도 리셋
-        SetLowHealthVignette(false);
-
-        HideAllNotifications();
+        ResetAllGameSystems();
 
         // 게임 상태 리셋 (재시작용)
         GameManager.Instance.RestartGame();
@@ -635,10 +623,7 @@ public class UIManager : MonoBehaviour
     {
         GameVictoryContainer.gameObject.SetActive(false);
 
-        // 비네팅 효과도 리셋
-        SetLowHealthVignette(false);
-
-        HideAllNotifications();
+        ResetAllGameSystems();
 
         // 게임 상태 완전 초기화 (홈으로 돌아가기)
         GameManager.Instance.ResetToHome();
@@ -714,4 +699,29 @@ public class UIManager : MonoBehaviour
     }
 
     #endregion
+
+    /// <summary>
+    /// 게임 종료/재시작 시 모든 시스템 초기화
+    /// </summary>
+    private void ResetAllGameSystems()
+    {
+        // 알림 UI 초기화
+        HideAllNotifications();
+
+        // 비네팅 효과 초기화
+        SetLowHealthVignette(false);
+
+        // 버프 시스템 초기화
+        BuffManager.ResetAllBuffStaticValues();
+
+        // 플레이어의 BuffManager가 있으면 모든 버프 제거
+        PlayerController player = FindFirstObjectByType<PlayerController>();
+        if (player != null)
+        {
+            BuffManager buffManager = player.GetComponent<BuffManager>();
+            if (buffManager != null) buffManager.ClearAllBuffs();
+        }
+
+        Debug.Log("모든 게임 시스템이 초기화되었습니다.");
+    }
 }

@@ -24,4 +24,14 @@ public class AttackPowerUpBuff : BaseBuff
 
         Debug.Log("공격력 버프 해제");
     }
+
+    /// <summary>
+    /// 게임 종료/재시작 시 static 변수 초기화
+    /// </summary>
+    public static void ResetStaticValues()
+    {
+        IsAttackPowerBuffActive = false;
+        AttackPowerMultiplier = 1f;
+        Debug.Log("AttackPowerUpBuff static 값 초기화");
+    }
 }
