@@ -6383,7 +6383,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Audio Assets\n\tPlatformer and Puzzle - Cyberwave Orchestra\n\tDamage
+  m_text: "\nAudio Assets\n\tPlatformer and Puzzle - Cyberwave Orchestra\n\tDamage
     Sounds (Male) - VoiceBosch\n\tSmall Sound Kit - Sound Works 12\n\nEnglish Word\n\tOxford
     5000\n\n\uD55C\uAD6D\uC5B4 \uB2E8\uC5B4\n\t\uAD6D\uB9BD\uAD6D\uC5B4\uC6D0 \uD45C\uC900\uAD6D\uC5B4\uB300\uC0AC\uC804"
   m_isRightToLeft: 0
@@ -9746,11 +9746,12 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "Development\n\t20011782 \uC870\uC900\uC601\n\n3D Modeling & Animation
-    \n\tVampire a Lusth - Mixamo\n\tAbe - Mixamo\n\nGraphic Assets\n\tDark Theme
-    UI - Giniel Villacote\n\tSkybox Series Free - Avionx\n\tWorld Materials Free
-    - Avionx\n\tPBR Materials Sampler Pack - Integrity Software & Games\n\tMagic
-    Effects FREE - Hovl Studio\n\tFree Quick Effects Vol. 1 - Gabriel Aguiar Prod\n\tsimple
-    icon pastel tone - astr999\n\nFont\n\tNanum Gothic"
+    \n\tVampire a Lusth - Mixamo\n\tAbe - Mixamo\n\tDemon T - Mixamo\n\tSimple Gems
+    and Items Pack - BenjaTheMaker\n\nGraphic Assets\n\tDark Theme UI - Giniel Villacote\n\tSkybox
+    Series Free - Avionx\n\tWorld Materials Free - Avionx\n\tPBR Materials Sampler
+    Pack - Integrity Software & Games\n\tMagic Effects FREE - Hovl Studio\n\tFree
+    Quick Effects Vol. 1 - Gabriel Aguiar Prod\n\tsimple icon pastel tone - astr999\n\nFont\n\tNanum
+    Gothic"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 52685777c00fd7949ae2f041bff6fbe4, type: 2}
   m_sharedMaterial: {fileID: -5366549389583982770, guid: 52685777c00fd7949ae2f041bff6fbe4, type: 2}

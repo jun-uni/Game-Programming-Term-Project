@@ -230,6 +230,20 @@ public class UIManager : MonoBehaviour
             buffDescription.SetActive(false);
     }
 
+    /// <summary>
+    /// 모든 알림 UI 즉시 숨기기 (게임 종료/재시작 시 사용)
+    /// </summary>
+    public void HideAllNotifications()
+    {
+        // 한/영키 경고 숨기기
+        HideKoreanEnglishKeyWarning();
+
+        // 버프 설명 숨기기
+        HideBuffDescription();
+
+        Debug.Log("모든 알림 UI가 초기화되었습니다.");
+    }
+
     #endregion
 
     #region 비네팅 효과 시스템
@@ -359,8 +373,6 @@ public class UIManager : MonoBehaviour
 
     #endregion
 
-    // 나머지 기존 코드들...
-
     private void UpdateTimerUI(float remainingTime)
     {
         // 게임 씬이 아니면 타이머 UI 업데이트 건너뛰기
@@ -413,6 +425,8 @@ public class UIManager : MonoBehaviour
         // 비네팅 효과도 리셋
         SetLowHealthVignette(false);
 
+        HideAllNotifications();
+
         // 게임 상태 리셋 (재시작용)
         GameManager.Instance.RestartGame();
 
@@ -426,6 +440,8 @@ public class UIManager : MonoBehaviour
 
         // 비네팅 효과도 리셋
         SetLowHealthVignette(false);
+
+        HideAllNotifications();
 
         // 게임 상태 완전 초기화 (홈으로 돌아가기)
         GameManager.Instance.ResetToHome();
@@ -452,6 +468,8 @@ public class UIManager : MonoBehaviour
         SetLowHealthVignette(false);
 
         UpdateUIVisibility();
+
+        HideAllNotifications();
     }
 
     /// <summary>
@@ -604,6 +622,8 @@ public class UIManager : MonoBehaviour
         // 비네팅 효과도 리셋
         SetLowHealthVignette(false);
 
+        HideAllNotifications();
+
         // 게임 상태 리셋 (재시작용)
         GameManager.Instance.RestartGame();
 
@@ -617,6 +637,8 @@ public class UIManager : MonoBehaviour
 
         // 비네팅 효과도 리셋
         SetLowHealthVignette(false);
+
+        HideAllNotifications();
 
         // 게임 상태 완전 초기화 (홈으로 돌아가기)
         GameManager.Instance.ResetToHome();
