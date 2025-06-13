@@ -312,7 +312,7 @@ public static class LocalizationManager
         localizedTexts["ui.game.koreankey.warning"] = new Dictionary<string, string>
         {
             ["ko"] = "한/영 키를 누르세요. 영어 입력이 안되고 있습니다.",
-            ["en"] = "Press the Korean/English key. English input is not working.",
+            ["eng"] = "Press the Korean/English key. English input is not working.",
             ["es"] = "Presione la tecla de cambio coreano/inglés. La entrada en inglés no funciona.",
             ["fr"] = "Appuyez sur la touche coréen/anglais. La saisie en anglais ne fonctionne pas."
         };
@@ -321,7 +321,7 @@ public static class LocalizationManager
         localizedTexts["ui.game.buff.speedup"] = new Dictionary<string, string>
         {
             ["ko"] = "플레이어 이동 속도 증가",
-            ["en"] = "Increases player movement speed",
+            ["eng"] = "Increases player movement speed",
             ["es"] = "Aumenta la velocidad de movimiento del jugador",
             ["fr"] = "Augmente la vitesse de déplacement du joueur"
         };
@@ -330,7 +330,7 @@ public static class LocalizationManager
         localizedTexts["ui.game.buff.attackpowerup"] = new Dictionary<string, string>
         {
             ["ko"] = "플레이어 공격력 증가",
-            ["en"] = "Increases player attack power",
+            ["eng"] = "Increases player attack power",
             ["es"] = "Aumenta el poder de ataque del jugador",
             ["fr"] = "Augmente la puissance d'attaque du joueur"
         };
@@ -338,14 +338,17 @@ public static class LocalizationManager
         // ui.game.buff.heal
         localizedTexts["ui.game.buff.heal"] = new Dictionary<string, string>
         {
-            ["ko"] = "플레이어 회복", ["en"] = "Heals the player", ["es"] = "Cura al jugador", ["fr"] = "Soigne le joueur"
+            ["ko"] = "플레이어 회복",
+            ["eng"] = "Heals the player",
+            ["es"] = "Cura al jugador",
+            ["fr"] = "Soigne le joueur"
         };
 
         // ui.game.buff.slowenmies
         localizedTexts["ui.game.buff.slowenmies"] = new Dictionary<string, string>
         {
             ["ko"] = "적군 이동 속도 감소",
-            ["en"] = "Slows enemy movement speed",
+            ["eng"] = "Slows enemy movement speed",
             ["es"] = "Reduce la velocidad de movimiento del enemigo",
             ["fr"] = "Ralentit la vitesse de déplacement des ennemis"
         };
@@ -354,11 +357,38 @@ public static class LocalizationManager
         localizedTexts["ui.game.buff.slowenemyspawn"] = new Dictionary<string, string>
         {
             ["ko"] = "적군 소환 속도 감소",
-            ["en"] = "Slows enemy spawn rate",
+            ["eng"] = "Slows enemy spawn rate",
             ["es"] = "Reduce la velocidad de aparición de enemigos",
             ["fr"] = "Ralentit la fréquence d'apparition des ennemis"
         };
 
+        // ui.main.fullscreen.alert
+        localizedTexts["ui.main.fullscreen.alert"] = new Dictionary<string, string>
+        {
+            ["ko"] =
+                "무조건 Chrome에서 플레이 해주세요.\n(Edge, Whale 등 타 Chromium 브라우저에서 WebGL 입력 이슈 존재)\n\n모니터의 해상도가 작아 UI가 짤릴 경우 F11을 눌러서 전체화면을 해주세요.",
+            ["eng"] =
+                "Please use Chrome only.\n(WebGL input issues may occur in other Chromium browsers such as Edge or Whale)\n\nIf the UI is cut off due to low screen resolution, press F11 for fullscreen mode.",
+            ["es"] =
+                "Por favor, juegue solo en Chrome.\n(Pueden ocurrir problemas de entrada WebGL en otros navegadores Chromium como Edge o Whale)\n\nSi la resolución del monitor es baja y la interfaz se ve recortada, presione F11 para el modo de pantalla completa.",
+            ["fr"] =
+                "Veuillez jouer uniquement avec Chrome.\n(Des problèmes de saisie WebGL peuvent survenir avec d'autres navigateurs Chromium comme Edge ou Whale)\n\nSi l'interface est coupée à cause d'une faible résolution, appuyez sur F11 pour passer en plein écran."
+        };
+
+        // ui.main.fullscreen.neversee
+        localizedTexts["ui.main.fullscreen.neversee"] = new Dictionary<string, string>
+        {
+            ["ko"] = "다시 보지 않기",
+            ["eng"] = "Don't show again",
+            ["es"] = "No mostrar de nuevo",
+            ["fr"] = "Ne plus afficher"
+        };
+
+        // ui.main.fullscreen.close
+        localizedTexts["ui.main.fullscreen.close"] = new Dictionary<string, string>
+        {
+            ["ko"] = "닫기", ["eng"] = "Close", ["es"] = "Cerrar", ["fr"] = "Fermer"
+        };
 
         Debug.Log($"하드코딩 데이터 로드 완료 - {localizedTexts.Count}개 키");
     }
@@ -589,11 +619,21 @@ public static class LocalizationManager
                 return;
             }
 
+            SystemLanguage oldGameLanguage = gameLanguage;
             gameLanguage = language;
             PlayerPrefs.SetString("GameLanguage", language.ToString());
             PlayerPrefs.Save();
 
-            Debug.Log($"게임 언어 변경됨: {language}");
+            Debug.Log($"게임 언어 변경됨: {oldGameLanguage} → {language}");
+
+            try
+            {
+                OnLanguageChanged?.Invoke(systemLanguage);
+            }
+            catch
+            {
+                // 이벤트 에러 무시
+            }
         }
         catch
         {

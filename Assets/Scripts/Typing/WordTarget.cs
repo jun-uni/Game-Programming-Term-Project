@@ -64,8 +64,10 @@ public class WordTarget : MonoBehaviour
             // 타이핑 매니저의 한국어 모드에 따라 단어 선택
             bool useKoreanMode = TypingManager.Instance != null && TypingManager.Instance.IsKoreanMode();
 
+
             if (useKoreanMode)
             {
+                Debug.Log("한글 모드라 한글 단어 설정합니다");
                 Word = WordDatabase.Instance.GetRandomKoreanWord();
                 SetupKoreanWord();
             }

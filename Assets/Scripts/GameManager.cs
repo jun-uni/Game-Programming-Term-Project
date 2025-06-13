@@ -93,6 +93,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+        //PlayerPrefs.DeleteAll();
         // 싱글톤 패턴
         if (Instance == null)
         {
